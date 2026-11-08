@@ -1,8 +1,8 @@
-import React,{useEffect, useState} from "react";
+import React from "react";
 
 import { ThemeProvider, StyledEngineProvider, useTheme } from '@mui/material/styles';
 import makeStyles from '@mui/styles/makeStyles';
-import {CssBaseline,IconButton,useMediaQuery} from "@mui/material";
+import {CssBaseline} from "@mui/material";
 
 const useStyles = makeStyles(theme => ({
     mainBox:{
@@ -29,11 +29,10 @@ const useStyles = makeStyles(theme => ({
 const PeerListItem = (props) => {
     const theme = useTheme();
     const classes = useStyles();
-    const xsScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
     return (
         <StyledEngineProvider injectFirst>
-            (<ThemeProvider theme={theme} >
+            <ThemeProvider theme={theme} >
                 <CssBaseline/>
                 <div className={classes.mainBox}>
                     <div style={{
@@ -47,7 +46,7 @@ const PeerListItem = (props) => {
                         {props.children}
                     </div>
                 </div>
-            </ThemeProvider>)
+            </ThemeProvider>
         </StyledEngineProvider>
     );
 };

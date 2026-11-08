@@ -1,228 +1,236 @@
-import React, { useState, useEffect, createRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Camera from "./Camera";
 import TestCamera from "./TestCamera";
 import {
-    Input,
-    Button,
     CssBaseline,
-    InputAdornment,
-    Box,
-    InputLabel,
-    IconButton,
-    TextField,
     ThemeProvider,
     StyledEngineProvider,
     useMediaQuery,
-    Select,
-    MenuItem,
-    adaptV4Theme,
 } from "@mui/material";
-import { createTheme, useTheme } from '@mui/material/styles';
+import { useTheme } from '@mui/material/styles';
 
-import makeStyles from '@mui/styles/makeStyles';
+import makeStyles from "@mui/styles/makeStyles";
 
-import { Adb, Mic, MicOff, Videocam, VideocamOff } from '@mui/icons-material';
-import ImageIcon from '@mui/icons-material/Image';
+import { Mic, MicOff, Videocam, VideocamOff } from '@mui/icons-material';
 import MediaPlayerWidget from "./MediaPlayerWidget";
-import logoEyeBee from "./img/logo_eyebee_fondo_negrov2.jpg";
+import DeviceSelect from "./DeviceSelect";
+import logoEyeBee from "./img/logo-eyebee-new-dark.svg";
 import PeerTestWidget from "./peerTest/PeerTestWidget";
-import config from './config';
-
-import axios from 'axios';
-
-const darkFormField = createTheme(adaptV4Theme({
-    palette: {
-        background: {
-            default: "#212121",
-            paper: "#212121"
-        },
-        primary: {
-            main: "#fafafa",
-
-        },
-        secondary: {
-            main: "#fafafa",
-            contrastText: "#fafafa"
-        },
-        text: {
-            primary: "#fafafa",
-            secondary: "#bdbdbd"
-        },
-        action: {
-            disabled: "#ffe082",
-            disabledBackground: "#ffe082"
-        }
-    }
-}));
-
-const lightButton = createTheme(adaptV4Theme({
-    palette: {
-        primary: {
-            main: "#F29F39",
-            contrastText: "#ffffff"
-
-        },
-        secondary: {
-            main: "#fafafa",
-            contrastText: "#212121"
-        },
-        text: {
-            primary: "#fafafa",
-            secondary: "#bdbdbd"
-        },
-        action: {
-            disabled: "black",
-            disabledBackground: "#292929"
-        }
-    }
-}));
+import MobilePreJoin from "./PreJoin/MobilePreJoin";
+import PreRoomLoading from "./PreJoin/PreRoomLoading";
 
 const useStyles = makeStyles(theme => ({
-    mainBox: {
-        display: "flex",
-        flex: "2",
+    page: {
+        minHeight: "100dvh",
         width: "100%",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "flex-start"
-    },
-    logoBox: {
+        backgroundColor: "var(--color-paper)",
+        color: "var(--color-ink)",
         display: "flex",
         flexDirection: "column",
-        alignItems: "flex-start",
-        justifyContent: "center",
-        margin: "1em 0"
-    },
-    mediaBox: {
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "flex-start",
-        justifyContent: "center"
-    },
-    mediaSelectionBox: {
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexDirection: "column",
-        margin: "1em 0"
-    },
-    [theme.breakpoints.up("md")]: {
-        mediaSelectionBox: {
-            margin: "2em 0"
+        padding: "24px 20px 40px",
+        [theme.breakpoints.up("md")]: {
+            padding: "32px 40px 48px",
         },
-        deviceField: {
-            maxWidth: "25em"
-        },
-        userNameField: {
-            maxWidth: "25em"
-        }
     },
-    [theme.breakpoints.down('md')]: {
-        mediaSelectionBox: {
-            margin: "1em 0"
-        },
-        deviceField: {
-            maxWidth: "17em"
-        },
-        userNameField: {
-            maxWidth: "17em"
-        }
-    },
-    actionsBox: {
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
+    header: {
         width: "100%",
-        margin: "1em 0"
-    },
-    roundedBtn: {
-        textTransform: "none",
-        borderRadius: "0.5em"
-    },
-    roomActionBtn: {
-        margin: "0 1em",
-        minWidth: "7em",
-        fontSize: "1.2em"
-    },
-    statusBox: {
+        maxWidth: "1120px",
+        margin: "0 auto 24px",
         display: "flex",
         alignItems: "center",
         justifyContent: "flex-start",
+    },
+    logo: {
+        width: "120px",
+        height: "auto",
+    },
+    grid: {
         width: "100%",
-        color: "#424242"
+        maxWidth: "1008px",
+        margin: "0 auto",
+        display: "grid",
+        gridTemplateColumns: "minmax(0, 1fr)",
+        gap: "24px",
+        alignItems: "stretch",
+        [theme.breakpoints.up("md")]: {
+            gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
+            gap: "48px",
+        },
     },
-    statusText: {
-        margin: "0.5em 1em"
-    },
-    sideBox: {
+    previewColumn: {
+        minWidth: 0,
         display: "flex",
         flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "flex-start",
+        backgroundColor: "var(--color-paper-2)",
+        border: "1px solid var(--color-rule)",
+        borderRadius: "var(--radius-card)",
+        padding: "24px",
+        [theme.breakpoints.up("sm")]: {
+            padding: "32px",
+        },
+    },
+    previewLabel: {
+        marginBottom: "var(--space-md)",
+        fontSize: "var(--text-md)",
+        fontWeight: 600,
+        lineHeight: 1.4,
+        color: "var(--color-ink)",
+    },
+    previewFrame: {
+        flex: 1,
         width: "100%",
-        backgroundColor: "#292929",
-        color: "#f5f5f5"
-    },
-    roomPlayersBox: {
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "flex-start",
-        backgroundColor: "#000"
-    },
-    actionBtn: {
-        padding: "1em 0",
-        backgroundColor: theme.palette.lightbg
-    },
-    userNameField: {
-        width: "100%"
-    },
-    deviceField: {
-        margin: "1em 0",
-        width: "100%"
-    },
-    messageBox: {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: "1em",
-        textAlign: "justify"
     },
-    message: {
-        color: theme.palette.primary.main,
-        fontWeight: "bold"
-    }
-    ,
-    hide: {
-        visibility: "hidden"
-    }
-
+    toggles: {
+        marginTop: "var(--space-md)",
+        display: "flex",
+        flexWrap: "wrap",
+        justifyContent: "center",
+        gap: "var(--space-xs)",
+    },
+    toggleBtn: {
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "var(--space-xs)",
+        minHeight: "44px",
+        padding: "0 var(--space-md)",
+        borderRadius: "var(--radius-control)",
+        border: "1px solid var(--color-field-border)",
+        backgroundColor: "transparent",
+        color: "var(--color-ink)",
+        fontSize: "var(--text-sm)",
+        fontWeight: 600,
+        lineHeight: 1,
+        cursor: "pointer",
+        transition: "border-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out)",
+        "&:hover": {
+            borderColor: "var(--color-accent)",
+        },
+        "&:active": {
+            backgroundColor: "var(--color-paper-3)",
+        },
+        "&:disabled": {
+            opacity: 0.5,
+            cursor: "not-allowed",
+        },
+    },
+    toggleBtnOn: {
+        borderColor: "var(--color-accent)",
+        color: "var(--color-accent)",
+    },
+    panel: {
+        minWidth: 0,
+        backgroundColor: "var(--color-paper-2)",
+        border: "1px solid var(--color-rule)",
+        borderRadius: "var(--radius-card)",
+        padding: "24px",
+        [theme.breakpoints.up("sm")]: {
+            padding: "32px",
+        },
+    },
+    title: {
+        fontSize: "clamp(1.75rem, 2.4vw + 1rem, 2.25rem)",
+        lineHeight: 1.15,
+        letterSpacing: "-0.02em",
+        color: "var(--color-ink)",
+    },
+    subtitle: {
+        marginTop: "var(--space-xs)",
+        marginBottom: "var(--space-lg)",
+        fontSize: "var(--text-sm)",
+        lineHeight: 1.55,
+        color: "var(--color-muted)",
+    },
+    testBox: {
+        marginBottom: "var(--space-lg)",
+    },
+    field: {
+        marginBottom: "var(--space-md)",
+    },
+    label: {
+        display: "block",
+        marginBottom: "6px",
+        fontSize: "var(--text-sm)",
+        fontWeight: 600,
+        lineHeight: 1.4,
+        color: "var(--color-ink)",
+    },
+    input: {
+        width: "100%",
+        height: "var(--control-height)",
+        padding: "0 var(--space-sm)",
+        borderRadius: "var(--radius-control)",
+        border: "1px solid var(--color-field-border)",
+        backgroundColor: "var(--color-field)",
+        color: "var(--color-ink)",
+        fontSize: "var(--text-md)",
+        lineHeight: 1.4,
+        "&::placeholder": {
+            color: "var(--color-muted)",
+            opacity: 1,
+        },
+        "&:hover": {
+            borderColor: "var(--color-muted)",
+        },
+    },
+    fieldError: {
+        marginTop: "6px",
+        fontSize: "var(--text-sm)",
+        lineHeight: 1.5,
+        color: "var(--color-error)",
+    },
+    joinBtn: {
+        width: "100%",
+        height: "var(--control-height)",
+        marginTop: "var(--space-xs)",
+        border: 0,
+        borderRadius: "var(--radius-control)",
+        backgroundColor: "var(--color-accent)",
+        color: "var(--color-accent-ink)",
+        fontSize: "var(--text-md)",
+        fontWeight: 600,
+        lineHeight: 1,
+        whiteSpace: "nowrap",
+        cursor: "pointer",
+        transition: "background-color var(--dur-micro) var(--ease-out)",
+        "&:hover": {
+            backgroundColor: "color-mix(in oklab, var(--color-accent) 90%, white)",
+        },
+        "&:active": {
+            backgroundColor: "color-mix(in oklab, var(--color-accent) 86%, black)",
+        },
+        "&:disabled": {
+            backgroundColor: "var(--color-paper-3)",
+            color: "var(--color-muted)",
+            cursor: "not-allowed",
+        },
+    },
+    status: {
+        marginTop: "var(--space-sm)",
+        fontSize: "var(--text-sm)",
+        lineHeight: 1.5,
+        color: "var(--color-muted)",
+    },
+    statusError: {
+        color: "var(--color-error)",
+    },
 }));
-
 
 const JoinRoomView = (props) => {
     const classes = useStyles();
     const theme = useTheme();
 
-    const [file, setFile] = useState('');
-    const fileInput = createRef();
-    const [formFile, setFormFile] = useState(null);
-    const [nomedia, setnomedia] = useState(false);
     const [cameraEnable, setCameraEnable] = useState(false);
-    const [filename, setFilename] = useState('Selleccione un archivo');
-    const [uploadedFile, setUploadedFile] = useState({});
-    const [roomManager, setRoomManager] = useState(null);
-    const [natType, setNATType] = useState();
-    const [webRTCTest, setWebRTCTest] = useState(null);
-    const [webRTCConfig, setWebRTCConfig] = useState(config.getIceServers());
 
-
-    const xsScreen = useMediaQuery(theme.breakpoints.up("xs"));
+    const smScreen = useMediaQuery(theme.breakpoints.up("sm"));
     const mdScreen = useMediaQuery(theme.breakpoints.up("md"));
-    const lgScreen = useMediaQuery(theme.breakpoints.up("lg"));
-    const [playerSize, setPlayerSize] = useState(0);
-    const [logoSize, setLogoSize] = useState(0);
+    const previewSize = mdScreen ? 300 : smScreen ? 280 : 200;
     const [userName, setUserName] = useState("");
+    const [mobileJoinError, setMobileJoinError] = useState("");
+    const mobileCameraSetup = useRef(false);
+    const mobileJoinInFlight = useRef(false);
 
     const [streamsStatus, setStreamsStatus] = useState({
         camera: false,
@@ -256,10 +264,8 @@ const JoinRoomView = (props) => {
     });
 
     const [camera, setCamera] = useState(null);
-    const [testCamera, setTestCamera] = useState(null);
 
-    const [userInfo, setUserInfo] = useState(null);
-    const [roomInfo, setRoomInfo] = useState(null);
+    const [roomInfo] = useState(null);
     const [availableCameras, setAvailableCameras] = useState([
         {
             deviceId: 1,
@@ -275,7 +281,7 @@ const JoinRoomView = (props) => {
     const [selectedCamera, setSelectedCamera] = useState("");
     const [selectedMic, setSelectedMic] = useState("");
 
-    const [defaultVideoConstraints, setdefaultVideoConstraints] = useState({
+    const [defaultVideoConstraints] = useState({
         height: {
             ideal: 240,
             max: 480
@@ -290,7 +296,7 @@ const JoinRoomView = (props) => {
         }
     });
 
-    const [lowVideoConstraints, setlowVideoConstraints] = useState({
+    const [lowVideoConstraints] = useState({
         height: {
             ideal: 240,
             max: 480
@@ -307,18 +313,11 @@ const JoinRoomView = (props) => {
 
     const [peerTestHasFinished, setPeerTestHasFinished] = useState(false);
     const [peerTestResults, setPeerTestResults] = useState(null);
-    const [testDisabled, setTestDisabled] = useState(false);
     const [cameraLoaded, setCameraLoaded] = useState(false);
     const [joinDisabled, setJoinDisabled] = useState(true);
-    const [peerScore, setPeerScore] = useState(null);
+    const [peerScore] = useState(null);
     const [userNameTimeout, setUserNameTimeout] = useState(null);
     const [usNameFieldStatus, setUsNameFieldStatus] = useState(null);
-    // const getBasicData = async (roomAPI,userAPI,roomId,userId) => {
-    //     let userData = await userAPI.getUserData(userId);
-    //     let roomData = await roomAPI.getRoomData(roomId);
-    //     setUserInfo(userData);
-    //     setRoomInfo(roomData);
-    // }
 
     useEffect(() => {
         let disableJoin = false;
@@ -349,7 +348,6 @@ const JoinRoomView = (props) => {
             disableJoin = true;
         }
 
-        console.log("JoinRoomView -- Effect ",{data:props.userData});
 
         if(props.userData.smallRoom && props.userData.isPresenter){
             disableJoin = false;
@@ -358,50 +356,11 @@ const JoinRoomView = (props) => {
 
         setJoinDisabled(disableJoin);
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.userData.isOwner, roomInfo, peerTestHasFinished, props.testDisabled, cameraLoaded,peerScore]);
 
-    const getPlayerSize = (userType) => {
-        let size = 150;
-        let logoSize = 8;
-
-        if (mdScreen) {
-            size = 150;
-            logoSize = 10;
-
-        }
-
-        if (lgScreen) {
-            size = 150;
-            logoSize = 12;
-        }
-
-        // if(userType == "presenter"){
-        //   size = Math.ceil(size*0.5);
-        // }
-
-        // if(userType == "spectator"){
-        //   size = Math.ceil(size*0.25);
-        // }
-
-        return {
-            playerSize: size,
-            logoSize: logoSize
-        };
-
-    }
-
     const showError = err => {
-        console.trace();
         console.error("JoinRoomView - Error", { error: err });
-    }
-
-    const timeout = (millis) => {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                resolve();
-            }, millis || 0);
-        });
-
     }
 
     const setupCamera = async () => {
@@ -419,7 +378,6 @@ const JoinRoomView = (props) => {
             if (hasPermission) {
     
                 let devList = await camera.listDevices();
-                console.log("devices listed", { list: devList });
                 let camList = devList.filter(e => {
                     return e.kind === "videoinput";
                 });
@@ -429,10 +387,6 @@ const JoinRoomView = (props) => {
                 });
     
                 if (camList.length > 0) {
-    
-                    camList.forEach(e => {
-                        console.log("camera detected", { dev: e, label: e.label, id: e.deviceId });
-                    });
     
                     setSelectedCamera(camList[0].deviceId);
                     setAvailableCameras(camList);
@@ -446,23 +400,17 @@ const JoinRoomView = (props) => {
                     cameraConfig.video.deviceId = camList[0].deviceId;
     
                 } else {
-                    console.warn("setupCamera -- No camera Detected! disabling camera ", { camList: camList });
                     cameraConfig.video = false;
     
                 }
     
                 if (micList.length > 0) {
     
-                    micList.forEach(e => {
-                        console.log("mic detected", { mic: e, label: e.label, id: e.deviceId });
-                    });
-    
                     setSelectedMic(micList[0].deviceId);
                     setAvailableMics(micList);
     
                     cameraConfig.audio.deviceId = micList[0].deviceId;
                 } else {
-                    console.warn("setupCamera -- No Mic Detected! Disabling audio ", { micList: micList });
                     cameraConfig.audio = false;
                 }
     
@@ -490,15 +438,11 @@ const JoinRoomView = (props) => {
                     setCamera(camera);
         
                     props.onCamera(camera);
-                } else {
-                    console.warn("setupCamera -- No Devices Detected! camera won't be initialized", { micList: micList, camList: camList });
-    
                 }
     
                 setCameraLoaded(true);
             }else{
                 //does not have permission to list devices, 
-                console.log("por aca ########3");
                 setSelectedCamera(0);
                 setAvailableCameras([{
                     deviceId:0,
@@ -534,68 +478,37 @@ const JoinRoomView = (props) => {
 
         if(props.testCanvasEl){
             setupCamera().then(() => {
-                setUserName(props.userData.name);
-                console.log("JoinRoomView - camera setup finished");
+                setUserName(props.userData.name || "");
     
             }).catch(err => {
-                console.log(err);
                 showError(err);
             });
         }
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.testCanvasEl]);
 
-
     useEffect(() => {
-
-        if (props.roomManager) {
-            props.roomManager.addRoomEventCallbacks({
-                "onRoomInfo": data => {
-                    console.log("joinRoomView -- onRoomInfo ",{data:data});
-                    setRoomInfo(data);
-                    if(data && data.participants === data.maxPeers){
-
-                        setUsNameFieldStatus({
-                            type:"error",
-                            message:"MAX_SESSION_PEERS_REACHED",
-                            longMessage: "This room reached its maximum number of participants."
-                        });
-                    }
-                },
-                "onPeerScore": data => {
-                    console.log("joinRoomView -- onPeerscore ",{data:data});
-                    setPeerScore(data);
-                }
+        if (mdScreen || camera || mobileCameraSetup.current) {
+            return;
+        }
+        mobileCameraSetup.current = true;
+        setupCamera().catch(err => {
+            showError(err);
+            setCameraLoaded(true);
+            setStreamsStatus({
+                camera: false,
+                mic: false
             });
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [mdScreen]);
 
-            props.roomManager.getRoomInfo(props.userData.roomId);
-
-        }
-
-    }, [props.roomManager]);
-
-    useEffect(() => {
-
-        if (props.roomManager && peerTestResults) {
-            
-            let obj = {
-                capabilities: peerTestResults,
-                isMobileDevice: props.userData.isMobileDevice
-            }
-            props.roomManager.requestPeerScore(obj);
-
-        }
-
-    }, [props.roomManager,peerTestResults]);
-
-    useEffect(() => {
-        let a = getPlayerSize("owner");
-        setPlayerSize(a.playerSize);
-        setLogoSize(a.logoSize);
-
-    }, [xsScreen, mdScreen, lgScreen]);
 
     const toggleCamera = async () => {
+        if (!camera) {
+            return;
+        }
         if (!camera.getStream()) {
 
             await camera.start();
@@ -624,6 +537,10 @@ const JoinRoomView = (props) => {
     }
 
     const toggleMic = async () => {
+
+        if (!camera) {
+            return;
+        }
 
         if (camera.isAudioEnabled()) {
             streamsStatus["mic"] = false;
@@ -656,33 +573,56 @@ const JoinRoomView = (props) => {
             return false;
         }
 
-        if (file == ''){
-            try{
-                await props.joinRoom(userName, streamsStatus, peerTestResults, '');
-                return true;
-            }catch(err){
+        try{
+            await props.joinRoom(userName, streamsStatus, peerTestResults, '');
+            return true;
+        }catch(err){
 
-                let status = {
-                    type:"error",
-                    message:err.error,
-                };
+            let status = {
+                type:"error",
+                message:err.error,
+            };
 
-                switch(err.error){
-                    case "MAX_SESSION_PEERS_REACHED": 
-                        status.longMessage = "This room reached its maximum number of participants.";
-                        setJoinDisabled(true);
-                    break;
-                }
-                setUsNameFieldStatus(status);
+            switch(err.error){
+                case "MAX_SESSION_PEERS_REACHED":
+                    status.longMessage = "This room reached its maximum number of participants.";
+                    setJoinDisabled(true);
+                break;
+                default: break;
             }
-            
-        }else{
-            await uploadAvatar();
+            setUsNameFieldStatus(status);
         }
-        
-       
-           
-        
+    }
+
+    const mobileJoinClicked = async () => {
+        if (mobileJoinInFlight.current || props.joining || !cameraLoaded || !props.roomManager) {
+            return;
+        }
+
+        mobileJoinInFlight.current = true;
+        setMobileJoinError("");
+        if (props.onJoinStart) {
+            props.onJoinStart();
+        }
+
+        try {
+            await props.joinRoom("Invitado", streamsStatus, peerTestResults, '');
+        } catch (err) {
+            if (props.onJoinCancel) {
+                props.onJoinCancel();
+            }
+            setMobileJoinError(
+                err && err.error === "MAX_SESSION_PEERS_REACHED"
+                    ? "Esta sala está llena."
+                    : "No se pudo entrar a la sala. Inténtalo de nuevo."
+            );
+        } finally {
+            mobileJoinInFlight.current = false;
+        }
+    }
+
+    const mobileCancel = () => {
+        window.location.assign("/");
     }
 
     const usernameChanged = async e => {
@@ -710,11 +650,10 @@ const JoinRoomView = (props) => {
             
     }
 
-    const selectedCameraChanged = async e => {
+    const selectedCameraChanged = async deviceId => {
 
-        setSelectedCamera(e.target.value);
-        console.log("selectedCameraChanged -- cambiÃ³ la cÃ¡mara fuente", { deviceId: e.target.value });
-        cameraConfig.video.deviceId = e.target.value;
+        setSelectedCamera(deviceId);
+        cameraConfig.video.deviceId = deviceId;
 
         await camera.start({
             ...cameraConfig
@@ -730,11 +669,10 @@ const JoinRoomView = (props) => {
 
     }
 
-    const selectedMicChanged = async e => {
+    const selectedMicChanged = async deviceId => {
 
-        setSelectedMic(e.target.value);
-        console.log("selectedMicChanged -- cambiÃ³ el mic fuente", { deviceId: e.target.value });
-        cameraConfig.audio.deviceId = e.target.value;
+        setSelectedMic(deviceId);
+        cameraConfig.audio.deviceId = deviceId;
 
         await camera.start({
             ...cameraConfig
@@ -751,288 +689,162 @@ const JoinRoomView = (props) => {
     }
 
     const peerTestFinished = results => {
-        console.debug("peerTestFinished -- results", { r: results });
         setPeerTestResults(results);
-        let userData = {
-            isMobileDevice: props.userData.isMobileDevice,
-            capabilities:results
-        }
-
-        //props.roomManager.requestPeerScore(userData);
         setPeerTestHasFinished(true);
     }
 
-    const onChange = e => {
-        if (e.target.files.length == 0) return;
-        setFile(URL.createObjectURL(e.target.files[0])); //Es un array y debe seleccionar el primero de los archivos
-        setFilename(e.target.files[0].name);
-        setFormFile(e.target.files[0])
-        console.log(e.target.files[0]);
-        toggleCamera();
-        //uploadAvatar();
-    };
-
-    const clickInUploadInput = () => {
-        fileInput.current.click();
-    }
-
-    //Gestionamos la subida como un envÃ­o de formulario
-    const uploadAvatar = async e => {
-        //e.preventDefault();
-        console.log("Entrando a subir imagÃ©n")
-
-        const formData = new FormData();
-        formData.append('file', formFile);
-
-        try {
-            const res = await axios.post('/videocall/api/upload-avatar', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                },
-            });
-            console.log(res.data.filePath);
-
-            console.log('Archivo subido satisfactoriamente ' + res.data.filePath);
-
-
-            try{
-                await props.joinRoom(userName, streamsStatus, peerTestResults, res.data.filePath);
-                return true;
-            }catch(err){
-
-                let status = {
-                    type:"error",
-                    message:err.error,
-                };
-
-                switch(err.error){
-                    case "MAX_SESSION_PEERS_REACHED": 
-                        status.longMessage = "This room reached its maximum number of participants.";
-                        setJoinDisabled(true);
-                    break;
-                }
-                setUsNameFieldStatus(status);
-            }
-
-            
-        } catch (err) {
-            if (err.response.status === 500) {
-                console.log('Ha ocurrido un problema con el servidor');
-            } else {
-                console.log(err.response.data.msg);
-            }
+    if (!mdScreen) {
+        if (props.joining) {
+            return <PreRoomLoading participantCount={props.joinParticipantCount} />;
         }
-    };
 
-    const testStreamAvailable = str => {
-        console.log("llama a testStreamAvailable! ",{str:str});
+        const mobilePrimaryHint = !cameraLoaded
+            ? "Preparando la cámara…"
+            : !props.roomManager
+                ? "Preparando la sala…"
+                : "";
+
+        return (
+            <MobilePreJoin
+                camera={camera}
+                cameraOn={streamsStatus.camera}
+                micOn={streamsStatus.mic}
+                onToggleCamera={toggleCamera}
+                onToggleMic={toggleMic}
+                participantCount={null}
+                primaryLabel={props.userData.create ? "Crear" : "Unirme"}
+                primaryDisabled={!cameraLoaded || !props.roomManager || props.joining}
+                primaryHint={mobilePrimaryHint}
+                onPrimary={mobileJoinClicked}
+                onCancel={mobileCancel}
+                error={mobileJoinError}
+            />
+        );
     }
 
     return (
         <StyledEngineProvider injectFirst>
-            (<ThemeProvider theme={theme}>
+            <ThemeProvider theme={theme}>
                 <CssBaseline />
-                <div className={classes.mainBox}>
+                <main className={classes.page}>
+                    <header className={classes.header}>
+                        <img className={classes.logo} src={logoEyeBee} alt="Eyebee" />
+                    </header>
 
-                    <div className={classes.logoBox}>
-                        <img style={{
-                            height: logoSize + "em",
-                            width: "auto"
-                        }} src={logoEyeBee} />
-                    </div>
-                    <div style={{
-                        margin: "1em 0 1em 0"
-                    }}>
-                        <PeerTestWidget showStats={props.showPeerTestStats} disabled={props.testDisabled} forcedScores={props.userData.forcedScores} onTestFinished={peerTestFinished} />
-                    </div>
+                    <div className={classes.grid}>
+                        <section className={classes.previewColumn} aria-label="Camera preview">
+                            <p className={classes.previewLabel}>Camera preview</p>
+                            <div className={classes.previewFrame}>
+                                <MediaPlayerWidget
+                                    isCameraEnable={cameraEnable}
+                                    nomedia={!cameraEnable}
+                                    avatar=""
+                                    playerSize={previewSize}
+                                    background={props.userData && props.userData.isPresenter ? "primary" : "secondary"}
+                                    volume={0}
+                                    stream={camera && camera.getStream()}
+                                />
+                            </div>
+                            <div className={classes.toggles}>
+                                <button
+                                    type="button"
+                                    className={`${classes.toggleBtn} ${streamsStatus.camera ? classes.toggleBtnOn : ""}`}
+                                    onClick={toggleCamera}
+                                >
+                                    {streamsStatus.camera ? <Videocam fontSize="small" /> : <VideocamOff fontSize="small" />}
+                                    <span>{streamsStatus.camera ? "Camera on" : "Camera off"}</span>
+                                </button>
+                                {props.userData.isOwner || props.userData.isPresenter ? (
+                                    <button
+                                        type="button"
+                                        className={`${classes.toggleBtn} ${streamsStatus.mic ? classes.toggleBtnOn : ""}`}
+                                        onClick={toggleMic}
+                                    >
+                                        {streamsStatus.mic ? <Mic fontSize="small" /> : <MicOff fontSize="small" />}
+                                        <span>{streamsStatus.mic ? "Microphone on" : "Microphone off"}</span>
+                                    </button>
+                                ) : null}
+                            </div>
+                        </section>
 
-                    <div className={classes.mediaBox}>
-                        <MediaPlayerWidget
-                            isCameraEnable={cameraEnable}
-                            nomedia={nomedia}
-                            avatar={file}
-                            playerSize={playerSize}
-                            background={props.userData && props.userData.isPresenter ? "primary" : "secondary"} volume={0} stream={camera && camera.getStream()} />
-                    </div>
+                        <section className={classes.panel} aria-label="Join the room">
+                            <h1 className={classes.title}>Ready to join?</h1>
+                            <p className={classes.subtitle}>Check your camera and microphone, then enter the room.</p>
 
-
-
-                    <div className={classes.actionsBox}>
-                        <Button color={camera && camera.isVideoEnabled() ? "primary" : "secondary"}
-                            style={theme.actionBtn}
-                            onClick={toggleCamera}>
-                            {
-                                streamsStatus.camera ?
-                                    (
-                                        <Videocam style={theme.defaultIcon} />
-                                    )
-                                    :
-                                    (
-                                        <VideocamOff style={theme.defaultIcon} />
-                                    )
-                            }
-
-                        </Button>
-                        {
-                            props.userData.isOwner || props.userData.isPresenter ?
-                                (
-                                    <Button color={camera && camera.isAudioEnabled() ? "primary" : "secondary"}
-                                        style={theme.actionBtn}
-                                        onClick={toggleMic}>
-                                        {
-                                            streamsStatus.mic ?
-                                                (
-                                                    <Mic style={theme.defaultIcon} />
-                                                )
-                                                :
-                                                (
-                                                    <MicOff style={theme.defaultIcon} />
-                                                )
-                                        }
-
-                                    </Button>
-                                )
-                                :
-                                (
-                                    <div />
-                                )
-                        }
-                        <Button color={"primary"}
-                            style={theme.actionBtn}
-                            onClick={clickInUploadInput}>
-                            <ImageIcon style={theme.defaultIcon} />
-                        </Button>
-
-
-                    </div>
-
-
-                    <StyledEngineProvider injectFirst>
-                        <ThemeProvider theme={darkFormField} >
-                            
-                            <form autoComplete="on" >
-                                <div className={classes.mediaSelectionBox}>
-                                    
-                                    <TextField
-                                        InputLabelProps={{
-                                            shrink: true,
-                                        }}
-                                        className={classes.userNameField}
-                                        inputProps={{ style: { textAlign: 'center' } }}
-                                        value={userName}
-                                        variant="filled"
-                                        error={usNameFieldStatus ? usNameFieldStatus.type ==="error" : false}
-                                        helperText={usNameFieldStatus ? usNameFieldStatus.longMessage : ""}
-                                        autoComplete="username" label="User name" placeholder="ej: Francisco"
-                                        onChange={usernameChanged} />
-
-                                    <Box style={{
-                                        display: 'flex', flexDirection: "row", justifyContent: "center", alignItems: 'center'
-                                    }} >
-                                        <Videocam color='secondary' />
-                                        <Select
-                                            inputProps={{ style: { textAlign: 'center' } }}
-                                            value={selectedCamera}
-                                            className={classes.deviceField}
-                                            variant="filled"
-                                            label="CÃ¡mara"
-                                            onChange={selectedCameraChanged}
-
-                                        >
-
-                                            {
-                                                availableCameras.map((dev, index) => (
-
-                                                    <MenuItem key={index} value={dev.deviceId}>
-                                                        {dev.label}
-                                                    </MenuItem>
-                                                ))
-                                            }
-                                        </Select>
-                                    </Box>
-
-                                    <Box style={{
-                                        display: 'flex', flexDirection: "row", alignItems: 'center'
-                                    }} >
-                                        <Mic color='secondary' />
-                                        <Select
-                                            inputProps={{ style: { textAlign: 'center' } }}
-                                            value={selectedMic}
-                                            className={classes.deviceField}
-                                            variant="filled"
-                                            label="MicrÃ³fono"
-                                            onChange={selectedMicChanged}
-
-                                        >
-
-                                            {
-                                                availableMics.map((dev, index) => (
-
-                                                    <MenuItem key={index} value={dev.deviceId}>
-                                                        {dev.label}
-                                                    </MenuItem>
-                                                ))
-                                            }
-                                        </Select>
-                                    </Box>
-
-
-
-                                    <input ref={fileInput} accept="image/*" type="file" onChange={onChange} className={classes.hide} />
+                            {!props.testDisabled ? (
+                                <div className={classes.testBox}>
+                                    <PeerTestWidget
+                                        showStats={props.showPeerTestStats}
+                                        disabled={props.testDisabled}
+                                        forcedScores={props.userData.forcedScores}
+                                        onTestFinished={peerTestFinished}
+                                    />
                                 </div>
-                            </form>
+                            ) : null}
 
-                        </ThemeProvider>
-                    </StyledEngineProvider>
+                            <div className={classes.field}>
+                                <label className={classes.label} htmlFor="user-name">Your name</label>
+                                <input
+                                    id="user-name"
+                                    className={classes.input}
+                                    type="text"
+                                    value={userName}
+                                    onChange={usernameChanged}
+                                    placeholder="e.g. David"
+                                    autoComplete="username"
+                                    aria-invalid={usNameFieldStatus && usNameFieldStatus.type === "error" ? "true" : "false"}
+                                    aria-describedby={usNameFieldStatus && usNameFieldStatus.type === "error" ? "name-error" : undefined}
+                                />
+                                {usNameFieldStatus && usNameFieldStatus.type === "error" ? (
+                                    <p id="name-error" className={classes.fieldError} role="alert">{usNameFieldStatus.longMessage}</p>
+                                ) : null}
+                            </div>
 
+                            <DeviceSelect
+                                id="camera-select"
+                                label="Camera"
+                                value={selectedCamera}
+                                options={availableCameras}
+                                onSelect={selectedCameraChanged}
+                                disabled={availableCameras.length === 0}
+                                emptyLabel="No camera found"
+                            />
 
+                            <DeviceSelect
+                                id="mic-select"
+                                label="Microphone"
+                                value={selectedMic}
+                                options={availableMics}
+                                onSelect={selectedMicChanged}
+                                disabled={availableMics.length === 0}
+                                emptyLabel="No microphone found"
+                            />
 
-                    <StyledEngineProvider injectFirst>
-                        <ThemeProvider theme={lightButton} >
-                            <Button id="joinBtn" disabled={joinDisabled || (usNameFieldStatus && usNameFieldStatus.type === "error")} variant="contained"
-                                color="primary" className={`${classes.roundedBtn} ${classes.roomActionBtn}`}
-                                onClick={joinBtnClicked}>Join</Button>
-                        </ThemeProvider>
-                    </StyledEngineProvider>
+                            <button
+                                id="joinBtn"
+                                type="button"
+                                className={classes.joinBtn}
+                                disabled={joinDisabled || !userName.trim() || (usNameFieldStatus && usNameFieldStatus.type === "error")}
+                                onClick={joinBtnClicked}
+                            >
+                                Join room
+                            </button>
 
-
-
-                    {
-                        !props.userData.isOwner ?
-                            (
-                                <div className={classes.messageBox}>
-                                    {
-                                        usNameFieldStatus && usNameFieldStatus.message === "MAX_SESSION_PEERS_REACHED" ?
-                                        (
-                                            <p className={classes.message}>Max session participants reached.</p>
-                                        )
-                                        :
-                                        (
-                                            <p className={classes.message}>
-                                                {
-                                                    joinDisabled ?
-                                                        "Wait a moment for the session to start"
-                                                        :
-                                                        "The session has started, you can enter"
-                                                }
-                                            </p>
-                                        )
-                                    }
-                                    
-
-                                </div>
-                            )
-                            :
-                            (
-                                <div />
-                            )
-                    }
-
-
-
-
-                </div>
-            </ThemeProvider>)
+                            {!props.userData.isOwner ? (
+                                usNameFieldStatus && usNameFieldStatus.message === "MAX_SESSION_PEERS_REACHED" ? (
+                                    <p className={`${classes.status} ${classes.statusError}`}>This room is full.</p>
+                                ) : !userName.trim() ? (
+                                    <p className={classes.status}>Enter your name to continue.</p>
+                                ) : joinDisabled ? (
+                                    <p className={classes.status}>Waiting for the room. This can take a moment.</p>
+                                ) : (
+                                    <p className={classes.status}>The room is open. Enter when you are ready.</p>
+                                )
+                            ) : null}
+                        </section>
+                    </div>
+                </main>
+            </ThemeProvider>
         </StyledEngineProvider>
     );
 };

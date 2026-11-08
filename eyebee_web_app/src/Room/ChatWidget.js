@@ -1,13 +1,8 @@
-import React, {useEffect,useState,useRef,createRef} from "react";
+import React, {useEffect,useState,createRef} from "react";
 
-//import useChat from "../useChat";
-
-import { Close,PanTool,Send } from "@mui/icons-material";
+import { Send } from "@mui/icons-material";
 import {
-    Paper,
-    Card,
     TextField,
-    Button,
     IconButton,
     ThemeProvider,
     StyledEngineProvider,
@@ -26,7 +21,7 @@ const darkFormField = createTheme(adaptV4Theme({
         },
         primary: {
             main: "#fafafa",
-           
+
         },
         secondary:{
             main:"#fafafa",
@@ -38,7 +33,7 @@ const darkFormField = createTheme(adaptV4Theme({
         },
         action:{
             disabled:"#ffe082",
-            disabledBackground:"#ffe082" 
+            disabledBackground:"#ffe082"
         }
     }
 }));
@@ -79,14 +74,6 @@ const useStyles = makeStyles(theme => ({
         padding:"0",
         alignItems:"center",
         justifyContent:"center"
-    },
-    fromLabel:{
-        marginRight:"0.5em",
-        fontSize:"0.9em",
-        fontWeight:"bold"
-    },
-    text:{
-        fontSize:"0.9em"
     }
   }));
 
@@ -95,12 +82,12 @@ const ChatWidget = (props) => {
     const classes = useStyles();
     const theme = useTheme();
     const [message,setMessage] = useState("");
-    const [target,setTarget] = useState(null);
+    const [target] = useState(null);
     const listRef = createRef();
 
     const updateMessageField = e => {
         setMessage(e.target.value);
-        
+
     }
 
     useEffect(() => {
@@ -109,18 +96,12 @@ const ChatWidget = (props) => {
     },[props.messages,listRef]);
 
 
-    useEffect(() => {
-
-        console.log("participants modificado",{participants:props.participants});
-
-    },[props.participants]);
-
     const send = () => {
         if(message){
             props.sendMessage(props.roomId, props.userId,target,message);
             setMessage("");
         }
-       
+
     }
 
 
@@ -131,7 +112,7 @@ const ChatWidget = (props) => {
     }
 
     return (
-        <StyledEngineProvider injectFirst>(<ThemeProvider theme={theme}>
+        <StyledEngineProvider injectFirst><ThemeProvider theme={theme}>
                     <CssBaseline />
                     <div className={classes.mainBox}>
                         <div className={classes.messagesBox}>
@@ -140,17 +121,6 @@ const ChatWidget = (props) => {
                                     props.messages && props.messages.map( (msg,index) => {
                                         return (
                                         <div key={index} className={classes.messageItemBox} >
-                                            {/* <p style={{
-                                                flex:"2",
-                                                fontSize:"0.9em",
-                                                margin:"0.5em 0"
-                                            }}>
-                                                <label
-                                                    className={classes.fromLabel}
-                                                >{props.participants && props.participants[msg.from] ? props.participants[msg.from].userName : "desconocido"}
-                                                </label> 
-                                                {msg.message}
-                                            </p> */}
 
                                             <ChatItem user={props.participants && props.participants[msg.from] ? props.participants[msg.from] : null}
                                             label={props.participants && props.participants[msg.from] ? props.participants[msg.from].userName : null} message={msg.message}></ChatItem>
@@ -166,13 +136,12 @@ const ChatWidget = (props) => {
                         <div className={classes.writeBox}>
                             <StyledEngineProvider injectFirst>
                                 <ThemeProvider theme={darkFormField} >
-                                    <TextField 
+                                    <TextField
                                         multiline
                                         style={{
                                             flex:"2",
                                             backgroundColor:darkFormField.palette.background.default
                                         }}
-                                        variant="filled"
                                         value={message}
                                         onKeyUp={keyPressed}
                                         onChange={updateMessageField}
@@ -191,7 +160,7 @@ const ChatWidget = (props) => {
                             </IconButton>
                         </div>
                     </div>
-                </ThemeProvider>)
+                </ThemeProvider>
                     </StyledEngineProvider>
     );
 };

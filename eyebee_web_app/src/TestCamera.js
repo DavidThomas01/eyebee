@@ -24,10 +24,12 @@ class TestCamera {
                   
                     return this.stream;
                 } else {
+                    // eslint-disable-next-line no-throw-literal
                     throw "TESTCAMERA_ALREADY_STARTED";
                 }
     
         }else{
+            // eslint-disable-next-line no-throw-literal
             throw "TESTCAMERA_CANVAS_ELEM_NOT_FOUND";
         }       
 

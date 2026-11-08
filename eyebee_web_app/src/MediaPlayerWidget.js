@@ -1,7 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
 
-import "./hexagon1.css";
-import "./bgHex.css";
 import { ThemeProvider, StyledEngineProvider, useTheme, createTheme, adaptV4Theme } from '@mui/material/styles';
 import makeStyles from '@mui/styles/makeStyles';
 import { CssBaseline } from "@mui/material";
@@ -18,7 +16,7 @@ const secondaryTheme = createTheme(adaptV4Theme({
     }
 }));
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles(() => ({
     mainBox: {
         display: "flex",
         flexDirection: "column",
@@ -28,28 +26,73 @@ const useStyles = makeStyles(theme => ({
         borderRadius: "0.3em",
         height: "100%"
     },
-    userNameBox: {
+    userNameBoxCentered: {
         position: "absolute",
+        inset: 0,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: "0.5em 0.5em",
-        fontSize: "0.8em",
-        backgroundColor: theme.palette.primary.main,
+        padding: "8%",
         zIndex: "3",
-        bottom: "0",
-        width: "100%"
+        pointerEvents: "none",
+        textAlign: "center"
     },
-    bgBox: {
+    userNameBoxCorner: {
         position: "absolute",
-        width: "88%",
+        inset: 0,
+        zIndex: "3",
+        pointerEvents: "none",
+        backgroundColor: "#141414",
+        clipPath: "polygon(100% 75%, 50% 100%, 34.35% 92.18%, 100% 59.35%)"
+    },
+    cornerText: {
+        position: "absolute",
+        left: "71.1%",
+        top: "81.6%",
+        width: "52%",
+        transform: "translate(-50%, -50%) rotate(-30deg)",
+        textAlign: "center",
+        textTransform: "uppercase",
+        letterSpacing: "0.08em",
+        whiteSpace: "nowrap"
+    },
+    userNameText: {
+        margin: 0,
+        maxWidth: "100%",
+        color: "#ffffff",
+        fontWeight: 800,
+        lineHeight: 1.2,
+        textShadow: "0 2px 8px rgba(0, 0, 0, 0.7)",
+        overflow: "hidden",
+        textOverflow: "ellipsis"
+    },
+    userNameTextCentered: {
+        whiteSpace: "normal",
+        overflowWrap: "anywhere"
+    },
+    hexFrame: {
+        position: "relative",
+        overflow: "hidden",
+        clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)",
         display: "flex",
         alignItems: "center",
-        justifyContent: "center",
-        bottom: "0",
-        zIndex: "0",
-        top: "0",
-
+        justifyContent: "center"
+    },
+    hex: {
+        position: "relative",
+        overflow: "hidden",
+        clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center"
+    },
+    labelClip: {
+        position: "absolute",
+        inset: 0,
+        overflow: "hidden",
+        clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)",
+        zIndex: "3",
+        pointerEvents: "none"
     }
 }));
 
@@ -62,7 +105,6 @@ const MediaPlayerWidget = (props) => {
     const [vidWidth, setVidWidth] = useState(150);
     const videoEl = useRef();
     const [showLabel, setShowLabel] = useState(true);
-    // const { messages, sendMessage } = useChat(props.roomId); // Creates a websocket and manages messaging
 
     useEffect(() => {
         if (mediaStream) {
@@ -72,6 +114,7 @@ const MediaPlayerWidget = (props) => {
             videoEl.current.volume = props.volume && props.volume !== 0 ? props.volume : 0;
 
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [mediaStream]);
 
     useEffect(() => {
@@ -92,28 +135,15 @@ const MediaPlayerWidget = (props) => {
     useEffect(() => {
 
         if (props.stream) {
-            // console.debug("ingresando al useEffect de mediaplayerwidget",{stream:props.stream,st:props.stream.getTracks()});
-            // let mStream = new MediaStream();
-            // props.stream.getTracks().forEach(track => {
-            //     console.log("un track");
-            //     console.log(track);
-            //     mStream.addTrack(track,props.stream);
-            // });
-            // console.log(mStream);
             setMediaStream(props.stream);
 
 
-            // videoEl.current.play().then(() => {
-            //     console.log("playing!");
-            // }).catch(err => {
-            //     console.error(err);
-            // });
 
         }
     }, [props.stream]);
 
     useEffect(() => {
-        if (props.playerSize < 70) {
+        if (props.playerSize < 36) {
            
             setShowLabel(false);
         } else {
@@ -126,127 +156,98 @@ const MediaPlayerWidget = (props) => {
 
         if (props.nomedia) {
            
-            // setVidHeight(videoEl.current.videoHeight);
-            // setVidWidth(videoEl.current.videoWidth);
             setShowPlayer(true);
         }
     }, [props.nomedia]);
 
-    // const generateNewStream = () => {
-    //     if(videoEl && videoEl.current){
-    //         return 
-    //     }else{
-    //         console.warn("generateNewStream -- could not generate new stream...is video defined?",{videoEl:videoEl});
-    //     }
-    // }
+
+    const labelSize = typeof props.playerSize === "number" ? props.playerSize : 150;
+    const cornerFontSize = Math.max(8, Math.round(labelSize * 0.055));
+    const centeredFontSize = Math.max(11, Math.round(labelSize * 0.12));
+    const hexWidth = props.playerSize ? props.playerSize * 0.866 : 100;
+    const hexHeight = props.playerSize ? props.playerSize : 100;
+    const hexColor = props.background === "primary" ? theme.palette.primary.main : secondaryTheme.palette.primary.main;
 
     return (
         <StyledEngineProvider injectFirst>
-            (<ThemeProvider theme={props.background === "primary" ? theme : secondaryTheme} >
+            <ThemeProvider theme={props.background === "primary" ? theme : secondaryTheme} >
                 <CssBaseline />
-                <div className={classes.mainBox} style={{
-                    position: "relative",
+                <div className={classes.mainBox} style={{ position: "relative" }}>
+                    <div
+                        className={classes.hexFrame}
+                        style={{
+                            width: (hexWidth + 8) + "px",
+                            height: (hexHeight + 8) + "px",
+                            backgroundColor: hexColor,
+                            visibility: showPlayer ? "visible" : "hidden"
+                        }}
+                    >
+                    <div
+                        className={classes.hex}
+                        style={{
+                            width: hexWidth + "px",
+                            height: hexHeight + "px",
+                            backgroundColor: hexColor
+                        }}
+                    >
+                        <img
+                            alt=""
+                            src={props.avatar !== '' ? props.avatar : testImg}
+                            style={{
+                                height: props.playerSize ? props.playerSize + "px" : "150px",
+                                width: "auto",
+                                position: "absolute",
+                                left: "50%",
+                                top: "50%",
+                                transform: "translate(-50%, -50%)",
+                                backgroundColor: "black",
+                                visibility: !props.isCameraEnable && !(props.label && showLabel) ? "visible" : "hidden"
+                            }}
+                        />
+                        <video
+                            playsInline
+                            style={{
+                                visibility: props.isCameraEnable ? "visible" : "hidden",
+                                width: "auto",
+                                height: props.playerSize ? props.playerSize + "px" : "150px",
+                                position: "absolute",
+                                left: "50%",
+                                top: "50%",
+                                backgroundColor: "black",
+                                transform: "translate(-50%, -50%) rotateY(180deg) scale(" + (vidHeight > vidWidth ? "1.5)" : "1)")
+                            }}
+                            ref={videoEl}
+                            autoPlay
+                        />
 
-
-                }}>
-
-                    <div className={classes.bgBox} >
-                        <div className="hex" style={{
-                            color: props.background === "primary" ? theme.palette.primary.main : secondaryTheme.palette.primary.main
-                        }} >
-
-                        </div>
-
-
-
-                        <svg style={{
-                            visibility: "hidden",
-                            position: "absolute"
-                        }} width="0" height="0" xmlns="http://www.w3.org/2000/svg" version="1.1">
-                            <defs>
-                                <filter id="goo"><feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur" />
-                                    <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9" result="goo" />
-                                    <feComposite in="SourceGraphic" in2="goo" operator="atop" />
-                                </filter>
-                            </defs>
-                        </svg>
+                        {
+                            props.label && showLabel ?
+                                (
+                                    <div className={classes.labelClip}>
+                                        <div
+                                            id="label"
+                                            className={props.isCameraEnable ? classes.userNameBoxCorner : classes.userNameBoxCentered}
+                                        >
+                                            <p
+                                                className={`${classes.userNameText} ${props.isCameraEnable ? classes.cornerText : classes.userNameTextCentered}`}
+                                                style={{
+                                                    fontSize: props.isCameraEnable ? cornerFontSize + "px" : centeredFontSize + "px"
+                                                }}
+                                            >
+                                                {props.label}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )
+                                :
+                                (
+                                    <div />
+                                )
+                        }
                     </div>
-
-                    <div className="hexagon hexagon1" style={{
-                        zIndex: "0",
-                        position: "relative",
-                        visibility: showPlayer ? "visible" : "hidden",
-                        width: props.playerSize ? (props.playerSize * 1.3) + "px" : "100px",
-                    }}>
-
-                        <div className="hexagon-in1" style={{
-                            zIndex: "-1",
-                            visibility: showPlayer ? "visible" : "hidden",
-                            position: "relative"
-                        }}>
-                            <div className="hexagon-in2">
-                                <div style={{
-                                    display: "flex",
-                                    position: "relative",
-                                    flexDirection: "column",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    visibility: showPlayer ? "visible" : "hidden",
-                                    height: props.playerSize ? props.playerSize + "px" : "100px",
-                                    width: props.playerSize ? (props.playerSize * 1.3) + "px" : "100px",
-                                    overflow: "hidden"
-
-                                }}>
-
-                                    <img style={{
-                                        height: props.playerSize ? props.playerSize + "px" : "150px",
-                                        width: "auto",
-                                        zIndex: "-1",
-                                        position: "absolute",
-                                        backgroundColor: "black",
-                                        visibility: props.isCameraEnable ? "hidden" : "visible"
-                                    }}
-                                        src={props.avatar != '' ? props.avatar : testImg}
-                                    />
-                                    <video
-                                    playsInline
-                                   
-                                        style={{
-                                            visibility: props.isCameraEnable ? "visible" : "hidden",
-                                            width: "auto",
-                                            height: props.playerSize ? props.playerSize + "px" : "150px",
-                                            zIndex: "-1",
-                                            position: "absolute",
-                                            backgroundColor: "black",
-                                            transform: "rotateY(180deg) scale(" + (vidHeight > vidWidth ? "1.5)" : "1)")
-                                        }} ref={videoEl} autoPlay />
-
-                                    {
-                                        props.label && showLabel ?
-                                            (
-                                                <div id="label" className={classes.userNameBox} >
-                                                    <p style={{
-                                                        margin: "0",
-                                                        maxWidth: "55%",
-                                                        textAlign: "center"
-                                                    }}>{props.label}</p>
-
-                                                </div>
-                                            )
-                                            :
-                                            (
-                                                <div />
-                                            )
-                                    }
-
-                                </div>
-                            </div>
-                        </div>
-
                     </div>
-
                 </div>
-            </ThemeProvider>)
+            </ThemeProvider>
         </StyledEngineProvider>
     );
 };

@@ -1,20 +1,11 @@
-import React, { useEffect, useState, useRef, createRef } from "react";
+import React, { useState } from "react";
 
-//import useChat from "../useChat";
-import { Close, PanTool, Send } from "@mui/icons-material";
 import {
-    FormGroup,
     TextField,
-    RadioGroup,
-    FormControlLabel,
-    Radio,
-    SvgIcon,
     Button,
-    IconButton,
     ThemeProvider,
     StyledEngineProvider,
     CssBaseline,
-    Switch,
     adaptV4Theme,
 } from "@mui/material";
 import { createTheme, useTheme } from '@mui/material/styles';
@@ -47,39 +38,12 @@ const darkFormField = createTheme(adaptV4Theme({
 }));
 
 const useStyles = makeStyles(theme => ({
-    mainBox: {
-        flex: "2",
-        width: "100%"
-    },
-    fromLabel: {
-        marginRight: "0.5em",
-        fontSize: "0.9em",
-        fontWeight: "bold"
-    },
-    text: {
-        fontSize: "0.9em"
-    },
     writeBox: {
         padding: "0.5em",
         alignItems: "center",
         justifyContent: "center",
         height: "100px",
         display: "flex"
-    },
-    subRoomsBox: {
-        width: "100%",
-        padding: "0.5em",
-        position: "relative",
-        overflowY: "auto",
-    },
-    subRoomItem: {
-        width: "100%",
-        padding: "1em",
-        position: "relative",
-        background: "#000",
-        margin: "0px 0px 10px 0px",
-        borderRadius: "10px",
-        fontSize: "0.8em"
     },
     newSubRoom: {
         position: "absolute",
@@ -102,8 +66,7 @@ const NewRoom = (props) => {
     const theme = useTheme();
     const [roomName, setroomName] = useState("");
     const [roomMax, setRoomMax] = useState();
-    const [type, setType] = useState('publica');
-    const [smallRoom, setSmallRoom] = useState(false);
+    const [smallRoom] = useState(false);
 
 
     const updateMessageField = e => {
@@ -119,12 +82,8 @@ const NewRoom = (props) => {
         props.toogleCreateNewSubRoom();
     }
 
-    const handleChange = (event) => {
-        setType(event.target.value);
-    };
-
     return (
-        <StyledEngineProvider injectFirst>(<ThemeProvider theme={theme}>
+        <StyledEngineProvider injectFirst><ThemeProvider theme={theme}>
                     <CssBaseline />
                     <div className={classes.newSubRoom} id="new-room">
                         <div className={classes.writeBox} >
@@ -135,7 +94,6 @@ const NewRoom = (props) => {
                                             flex: "2",
                                             backgroundColor: darkFormField.palette.background.default
                                         }}
-                                        variant="filled"
                                         value={roomName}
                                         onChange={updateMessageField}
                                         placeholder="Sala 1"
@@ -157,7 +115,6 @@ const NewRoom = (props) => {
                                             flex: "2",
                                             backgroundColor: darkFormField.palette.background.default
                                         }}
-                                        variant="filled"
                                         value={roomMax}
                                         onChange={updateRoomMaxField}
                                         placeholder="Usuarios"
@@ -202,7 +159,7 @@ const NewRoom = (props) => {
 
                         </div>
                     </div>
-                </ThemeProvider>)
+                </ThemeProvider>
                     </StyledEngineProvider>
     );
 }

@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createTheme, ThemeProvider, StyledEngineProvider, adaptV4Theme } from '@mui/material/styles';
 import makeStyles from '@mui/styles/makeStyles';
 import logoEyeBee from "../img/logo_eyebee_fondo_negrov2.jpg";
-import ImageIcon from '@mui/icons-material/Image';
-import { Input, Button, CssBaseline, InputAdornment, Box, InputLabel, IconButton, TextField, useMediaQuery, Select, MenuItem } from "@mui/material";
+import { Button, TextField, useMediaQuery } from "@mui/material";
 import axios from "axios"
 
 const theme = createTheme(adaptV4Theme({
@@ -59,12 +58,6 @@ const useStyles = makeStyles(theme => ({
         justifyContent: "center",
         margin: "1em 0"
     },
-    mediaBox: {
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "flex-start",
-        justifyContent: "center"
-    },
     mediaSelectionBox: {
         display: "flex",
         alignItems: "center",
@@ -76,9 +69,6 @@ const useStyles = makeStyles(theme => ({
         mediaSelectionBox: {
             margin: "2em 0"
         },
-        deviceField: {
-            maxWidth: "25em"
-        },
         userNameField: {
             maxWidth: "25em"
         }
@@ -87,19 +77,9 @@ const useStyles = makeStyles(theme => ({
         mediaSelectionBox: {
             margin: "1em 0"
         },
-        deviceField: {
-            maxWidth: "17em"
-        },
         userNameField: {
             maxWidth: "17em"
         }
-    },
-    actionsBox: {
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        width: "100%",
-        margin: "1em 0"
     },
     roundedBtn: {
         textTransform: "none",
@@ -110,57 +90,8 @@ const useStyles = makeStyles(theme => ({
         minWidth: "7em",
         fontSize: "1.2em"
     },
-    statusBox: {
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "flex-start",
-        width: "100%",
-        color: "#424242"
-    },
-    statusText: {
-        margin: "0.5em 1em"
-    },
-    sideBox: {
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "flex-start",
-        width: "100%",
-        backgroundColor: "#292929",
-        color: "#f5f5f5"
-    },
-    roomPlayersBox: {
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "flex-start",
-        backgroundColor: "#000"
-    },
-    actionBtn: {
-        padding: "1em 0",
-        backgroundColor: theme.palette.lightbg
-    },
     userNameField: {
         width: "100%"
-    },
-    deviceField: {
-        margin: "1em 0",
-        width: "100%"
-    },
-    messageBox: {
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "1em",
-        textAlign: "justify"
-    },
-    message: {
-        color: theme.palette.primary.main,
-        fontWeight: "bold"
-    }
-    ,
-    hide: {
-        visibility: "hidden"
     }
 }));
 
@@ -212,7 +143,7 @@ const lightButton = createTheme(adaptV4Theme({
 }));
 
 
-const NewUser = props => {
+const NewUser = () => {
 
     const navigate = useNavigate();
     const xsScreen = useMediaQuery(theme.breakpoints.up("xs"));
@@ -240,38 +171,13 @@ const NewUser = props => {
         setConfirmPassword(e.target.value === password ? true : false);
     }
 
-    const getPlayerSize = (userType) => {
-        let size = 150;
-        let logoSize = 8;
-
-        if (mdScreen) {
-            size = 150;
-            logoSize = 10;
-
-        }
-
-        if (lgScreen) {
-            size = 150;
-            logoSize = 12;
-        }
-
-        return {
-            playerSize: size,
-            logoSize: logoSize
-        };
-
-    }
-
     useEffect(() => {
-        let a = getPlayerSize("owner");
-        setLogoSize(a.logoSize);
+        setLogoSize(lgScreen ? 12 : mdScreen ? 10 : 8);
     }, [xsScreen, mdScreen, lgScreen]);
 
     const login = () => {
-        //Todo Login
         const payload = { name: userName, password: password, active: true, create_date: new Date() }
         axios.post("/api/v1/user/", payload).then(result => {
-            console.log(result);
             if (result.status === 201) {
                 alert("User created")
                 navigate('/admin/rooms');
@@ -284,14 +190,14 @@ const NewUser = props => {
 
     return (
         <StyledEngineProvider injectFirst>
-            (<ThemeProvider theme={theme}>
+            <ThemeProvider theme={theme}>
 
                 <div className={classes.mainBox}>
                     <div className={classes.logoBox}>
                         <img style={{
                             height: logoSize + "em",
                             width: "auto"
-                        }} src={logoEyeBee} />
+                        }} src={logoEyeBee} alt="Eyebee" />
                     </div>
 
 
@@ -345,7 +251,7 @@ const NewUser = props => {
 
 
                 </div>
-            </ThemeProvider>)
+            </ThemeProvider>
         </StyledEngineProvider>
     );
 }

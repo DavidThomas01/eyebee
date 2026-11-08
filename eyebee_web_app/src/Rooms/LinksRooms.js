@@ -1,17 +1,11 @@
-import React, { useEffect, useState, useRef, createRef } from "react";
+import React, { useEffect, useState } from "react";
 
-//import useChat from "../useChat";
-import { Close, PanTool, Send } from "@mui/icons-material";
 import {
     FormGroup,
     TextField,
-    RadioGroup,
     FormControlLabel,
     Switch,
-    Radio,
-    SvgIcon,
     Button,
-    IconButton,
     ThemeProvider,
     StyledEngineProvider,
     CssBaseline,
@@ -52,39 +46,12 @@ const darkFormField = createTheme(adaptV4Theme({
 }));
 
 const useStyles = makeStyles(theme => ({
-    mainBox: {
-        flex: "2",
-        width: "100%"
-    },
-    fromLabel: {
-        marginRight: "0.5em",
-        fontSize: "0.9em",
-        fontWeight: "bold"
-    },
-    text: {
-        fontSize: "0.9em"
-    },
     writeBox: {
         padding: "0.3em",
         alignItems: "center",
         justifyContent: "center",
         height: "100px",
         display: "flex"
-    },
-    subRoomsBox: {
-        width: "100%",
-        padding: "0em",
-        position: "relative",
-        overflowY: "auto",
-    },
-    subRoomItem: {
-        width: "100%",
-        padding: "1em",
-        position: "relative",
-        background: "#000",
-        margin: "0px 0px 10px 0px",
-        borderRadius: "10px",
-        fontSize: "0.8em"
     },
     newSubRoom: {
         position: "absolute",
@@ -121,18 +88,15 @@ const LinksRooms = (props) => {
         
         const paramsR = crypto.AES.encrypt(smallRoom ? "presenter=false&testDisabled=true&sfu=true" : "presenter=false", "human hive eyebee").toString();
         const paramsN = crypto.AES.encrypt("presenter=true&testDisabled=true&sfu=false", "human hive eyebee").toString();
-        console.log(paramsN);
-        console.log(crypto.AES.decrypt(paramsN, "human hive eyebee").toString(crypto.enc.Utf8));
-        //console.log(mainLink);
         setMainUser(`${mainLink}?p=${paramsM}`);
         setPresenter(`${mainLink}?p=${paramsP}`);
         setRegularUser(`${mainLink}?p=${paramsR}`);
         setNonSFU(`${mainLink}?p=${paramsN}`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [smallRoom]);
 
 
     const handleSwitchChange = (e) => {
-        console.log(e.target.checked);
         setSmallRoom(e.target.checked);
     }
 
@@ -160,7 +124,7 @@ const LinksRooms = (props) => {
 
     return (
         <StyledEngineProvider injectFirst>
-            (<ThemeProvider theme={theme}>
+            <ThemeProvider theme={theme}>
                 <CssBaseline />
                 <div className={classes.newSubRoom} id="new-room">
 
@@ -267,7 +231,7 @@ const LinksRooms = (props) => {
                         </Alert>
                     </Snackbar>
                 </div>
-            </ThemeProvider>)
+            </ThemeProvider>
         </StyledEngineProvider>
     );
 }

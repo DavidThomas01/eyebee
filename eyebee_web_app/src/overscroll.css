@@ -1,0 +1,6 @@
+/* Global overscroll guard: stop the browser rubber-band from revealing the page background. */
+html,
+body,
+#root {
+  overscroll-behavior: none;
+}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState,createRef,useRef } from "react";
+import React, { useEffect,createRef,useRef } from "react";
 
 
 const TestStreamWidget = (props) => {    
@@ -37,7 +37,6 @@ const TestStreamWidget = (props) => {
                     
                     
                 }else{
-                    console.debug("useEffect 1 -- canvas.current is null");
                 }
                 
                 reqAnimation.current = setTimeout(drawImage,1000);
@@ -60,10 +59,10 @@ const TestStreamWidget = (props) => {
         }
 
         return () => {
-            console.debug("cancelando el animation frame");
             clearTimeout(reqAnimation.current);
             //cancelAnimationFrame(reqAnimation.current);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     },[props.textOnly,videoRef.current,canvasRef.current]);
 
     return (

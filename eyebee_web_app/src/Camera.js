@@ -25,10 +25,12 @@ class Camera {
                 this.constraints = constraints;
                 return this.stream;
             } else {
+                // eslint-disable-next-line no-throw-literal
                 throw "CAMERA_ALREADY_STARTED";
             }
 
         } else {
+            // eslint-disable-next-line no-throw-literal
             throw "USERMEDIA_NOT_AVAILABLE";
         }
     }
@@ -75,7 +77,6 @@ class Camera {
     }
 
     enableVideo() {
-        console.log("Eanble video");
         if (this.stream && this.stream.getVideoTracks()[0]) {
             this.stream.getVideoTracks()[0].enabled = true;
         }

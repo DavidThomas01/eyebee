@@ -35,10 +35,8 @@ class Peer {
     }
 
     async updatePeerUpstreams(peer,targetPeerId,targetStreamId,originPeerId,originStreamId){
-        //let firstUpstream = false;
         if(!peer.upstream){
             peer.upstream = {};
-            //firstUpstream = true;
         }
 
         if(!peer.upstream[targetPeerId]){

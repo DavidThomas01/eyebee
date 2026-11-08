@@ -21,7 +21,6 @@ let helmet = require('helmet');
 const cors = require('cors');
 app.use(cors())
 
-// body-parser removed — using Express 5 built-in express.json() and express.urlencoded()
 const express = require("express");
 const MemoryDatabaseAPI = require("./memory-database-api");
 const memoryDBAPI = new MemoryDatabaseAPI();
@@ -162,12 +161,16 @@ const calculateMaxConnectedPeers = (minScore) => {
 
 }
 
-const assessPeerCapacity = (peerStats) => {
-    
+const assessPeerCapacity = (peerStats = {}) => {
+
+    const cpuValue = Number.isFinite(Number(peerStats.CPU && peerStats.CPU.value)) ? Number(peerStats.CPU.value) : 1;
+    const uploadValue = Number.isFinite(Number(peerStats.upload && peerStats.upload.value)) ? Number(peerStats.upload.value) : 50;
+    const connectionType = (peerStats.connectionType && peerStats.connectionType.value) || "STUN";
+
     let cpuScore = CPUCapacityScores[CPUCapacityScores.length - 1].score;
     for(let i=0; i< CPUCapacityScores.length; i++){
-        logger.info("comparando cpu "+peerStats.CPU.value+" "+ CPUCapacityScores[i].max);
-        if(peerStats.CPU.value <= CPUCapacityScores[i].max){
+        logger.info("comparando cpu "+cpuValue+" "+ CPUCapacityScores[i].max);
+        if(cpuValue <= CPUCapacityScores[i].max){
             cpuScore = CPUCapacityScores[i].score;
             break;
         }
@@ -177,7 +180,7 @@ const assessPeerCapacity = (peerStats) => {
 
     let netScore = NETCapacityScores[NETCapacityScores.length - 1].score;
     for(let i=0; i< NETCapacityScores.length; i++){
-        if(peerStats.upload.value >= NETCapacityScores[i].net_upload.min){
+        if(uploadValue >= NETCapacityScores[i].net_upload.min){
             netScore = NETCapacityScores[i].score;
             break;
         }
@@ -186,7 +189,7 @@ const assessPeerCapacity = (peerStats) => {
     logger.info("assessPeerCapacity -- resultado del netScore "+netScore);
 
     let result = {};
-    let supportsSTUN = peerStats.connectionType.value === "STUN";
+    let supportsSTUN = connectionType === "STUN";
     result.sfu = isSFUCapable(cpuScore,netScore,supportsSTUN);
     let minScore = cpuScore >= netScore? cpuScore : netScore;
     result.maxConnectedPeers = calculateMaxConnectedPeers(minScore);
@@ -345,7 +348,6 @@ const uploadImageToStorage = (file) => {
 
         let fileUpload = bucket.file(newFileName);
 
-        // logger.info(file.mimetype);
         const blobStream = fileUpload.createWriteStream({
             metadata: {
                 // This line is very important. It's to create a download token.
@@ -357,14 +359,12 @@ const uploadImageToStorage = (file) => {
 
         });
 
-        // //const blobStream = fileUpload.createWriteStream();
 
         blobStream.on('error', (error) => {
             reject('Something is wrong! Unable to upload at the moment. ' + error.message);
         });
 
         blobStream.on('finish', () => {
-            //logger.info(fileUpload);
             // The public URL can be used to directly access the file via HTTP.
             const publicUrl =
                 `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURI(fileUpload.name)}?alt=media`;
@@ -494,7 +494,6 @@ const removePeerFromSession = async (roomId, peerId) => {
                 sfu:false
             });
 
-            //getAssignedPeersPerSFU(null,peers);
             
             let targetSocketId ;
 
@@ -630,7 +629,6 @@ const removePeerFromSession = async (roomId, peerId) => {
                             assignedPeers: newAssignedSFU.assignedPeers
                         });
 
-                        //getAssignedPeersPerSFU(leavingPeer.id,peers);
 
             
                     }else{
@@ -641,7 +639,6 @@ const removePeerFromSession = async (roomId, peerId) => {
                 }
 
                 //with the updated sfu peers for each assignedPeers, send the sfu_assigned event  
-                //for peers to start sending their local streams to their new sfu
 
 
 
@@ -694,9 +691,6 @@ const removePeerFromSession = async (roomId, peerId) => {
             
                     //loop for non-sfu peers
 
-                    // peerIds = peerIds.filter( p => {
-                    //     return !peers[p].sfu;
-                    // });
 
                     logger.debug("removePeerFromSession -- processing non SFUs only",
                     {leavingPeerId:leavingPeer.id,nonSFUIds:peerIds});
@@ -724,7 +718,6 @@ const removePeerFromSession = async (roomId, peerId) => {
             
                                     let origin = downstreamsFromSFU[s];
             
-                                    //exclude the current assignedPeer(var p) from downstreamsFromSSU  
                                     //as this peer is already being retransmitted by the SFUs when sending
                                     //its stream to its new assigned SFU
 
@@ -757,10 +750,8 @@ const removePeerFromSession = async (roomId, peerId) => {
                                         io.to(targetSocketId).emit("peer_streams_remove_request", {
                                             peerId: origin.originPeerId,
                                             streamId: origin.originStreamId,
-                                            //resend:true
                                         });
 
-                                        // await timeout(1000);
 
                                         let brokenUpstreamPeerIds = session.getUpstreamPeerIds(peers,pId,origin.originStreamId);
                                         
@@ -801,7 +792,6 @@ const removePeerFromSession = async (roomId, peerId) => {
                                             io.to(brokenPeerSockId).emit("peer_streams_remove_request", {
                                                 peerId: origin.originPeerId,
                                                 streamId: origin.originStreamId,
-                                                //resend:true
                                             });
 
                                             logger.info("removePeerFromSession -- estado final de peers",{peers});
@@ -856,7 +846,6 @@ const removePeerFromSession = async (roomId, peerId) => {
             
                                     let origin = downstreamsFromSFU[s];
             
-                                    //exclude the current assignedPeer(var p) from downstreamsFromSSU  
                                     //as this peer is already being retransmitted by the SFUs when sending
                                     //its stream to its new assigned SFU
 
@@ -938,21 +927,11 @@ const getAssignedPeersPerSFU = (peerId,sessionPeers) => {
 
     logger.info("getAssignedPeersPerSFU -- filtered as SFUs",{sfus:sfus});
 
-    // Object.keys(sessionPeers).forEach(p => {
 
-    //     sfus.forEach(s => {
-    //         if(!sessionPeers[s].assignedPeers){
-    //             sessionPeers[s].assignedPeers = [];
-    //         }
 
-    //         if(sessionPeers[p].assignedSFU === s && sessionPeers[s].assignedPeers.indexOf(p) === -1){
-    //             sessionPeers[s].assignedPeers.push(p);
-    //         }
 
-    //     });
        
 
-    // });
 
     //sort sfus asc
     sfus = sfus.filter( s => {
@@ -1034,7 +1013,6 @@ const pickSFU = async (peer,roomId,userId,excludedPeerId) => {
             { "field": "id", "operator": "!=", "value": excludedPeerId }
         ]);
 
-        //getConnectedStreamsPerSFU(data.userId,sessionPeers);
        
 
         logger.info("pickSFU -- session peers con dos filtros",{peers:sessionPeers});
@@ -1054,7 +1032,6 @@ const pickSFU = async (peer,roomId,userId,excludedPeerId) => {
             { "field": "id", "operator": "!=", "value": excludedPeerId }
         ]);
 
-        //getConnectedStreamsPerSFU(data.userId,sessionPeers);
         let peersPerSFU = getAssignedPeersPerSFU(userId,sessionPeers);
 
         logger.info("pickSFU -- peersPerSFU",{peersPerSFU:peersPerSFU});
@@ -1065,18 +1042,9 @@ const pickSFU = async (peer,roomId,userId,excludedPeerId) => {
 
             return sessionPeers[candidateSFUId];
 
-            // await memoryDBAPI.updateMergeById("session_peers",userId, {
-            //     assignedSFU: candidateSFU
-            // });
 
-            // // io.to(socket.id)
-            // io.in(roomId).emit("sfu_assigned", {
-            //     userId: userId,
-            //     assignedSFU: candidateSFU
-            // });
 
         }else{
-            //io.to(socket.id).emit("sfu_not_found");
             return null;
         }
     }
@@ -1097,10 +1065,6 @@ io.on("connection", (socket) => {
         clearTimeout(disconnectionTimeouts[socket.handshake.query.peer_id]);
         delete disconnectionTimeouts[socket.handshake.query.peer_id];
     }
-    // let autoJoinRoom = false;
-    // if (socketIdMapping[socket.handshake.query.peer_id]) {
-    //     autoJoinRoom = true;
-    // }
     socketIdMapping[socket.handshake.query.peer_id] = socket.id;
 
     socket.on("username", async (data,callback) => {
@@ -1324,8 +1288,6 @@ io.on("connection", (socket) => {
 
 
 
-        // logger.info("join!");
-        // logger.info(data);
         socket.join(data.roomId);
         data.session_id = data.roomId;
         data.signaling_id = socket.id;
@@ -1393,11 +1355,8 @@ io.on("connection", (socket) => {
             sessionPeer.mainPresenter = true;
         }
 
-        // logger.info("el session peer");
-        // logger.info(sessionPeer);
 
         await memoryDBAPI.insert("session_peers", data.userId, sessionPeer);
-        //let peers = await memoryDBAPI.getAll("session_peers");
 
         peers = await memoryDBAPI.queryCollection("session_peers", [
             { "field": "session_id", "operator": "==", "value": data.roomId }
@@ -1713,7 +1672,6 @@ io.on("connection", (socket) => {
     });
 
     socket.on("peer_webrtc_message", async data => {
-        // logger.info("peer_webrtc_message",{data:data});
         let targetSocketId = socketIdMapping[data.target];
 
         delete data["target"];
@@ -1725,7 +1683,6 @@ io.on("connection", (socket) => {
     });
 
     socket.on("peer_stream_loaded", async data => {
-        // logger.info("peer_webrtc_message",{data:data});
         logger.info("peer_stream_loaded -- starting...",{data:data});
 
         let originPeer = await memoryDBAPI.findById("session_peers",data.originPeerId);
@@ -1774,7 +1731,6 @@ io.on("connection", (socket) => {
             });
             logger.info("peer_stream_loaded -- second filtering of peers to send request (originPeer is not a presenter)",{filteredPeerIds:filteredPeerIds});
         }   
-        //let currConnPeers = (peers[data.peerId].totalConnectedStreams ? peers[data.peerId].totalConnectedStreams.length : 0);
 
         if(!peers[data.peerId].downstream){
             peers[data.peerId].downstream = {};
@@ -1804,7 +1760,6 @@ io.on("connection", (socket) => {
                 remainingPeerCapacity:remainingPeerCapacity,
                 peerId:data.peerId,
                 maxConnectedPeers: peers[data.peerId].capabilities.maxConnectedPeers,
-                   // currConnPeers:currConnPeers
             });
      
             if(data.originPeerId !== fromPeer.assignedSFU){
@@ -1933,8 +1888,6 @@ io.on("connection", (socket) => {
                                 io.to(sfuSockId).emit("request_stream", rsDataPending);
                             });
 
-                            // logger.info("peer_stream_loaded -- origin peer is the same as last SFU...no relay needed",
-                            //     {fromPeer:fromPeer,lastSFU:lastSFU,originPeerId:data.originPeerId,originStreamId:data.originStreamId});
                         }
 
                         
@@ -2067,20 +2020,10 @@ io.on("connection", (socket) => {
 
                         if(!peer.streamAlreadyLoaded(peers[p],data.originPeerId,data.streamId)){
 
-                            // let targetSocketId = socketIdMapping[data.peerId];
         
-                            // let data2 = {
-                            //     peerId: p,
-                            //     target: data.originPeerId,
-                            //     loadedStreamId: data.streamId,
-                            //     targetLocalStreams: originPeer.localStreams
                 
-                            // };
 
-                            // logger.info("peer_stream_loaded -- sending send_peer_stream event to peer's assigned SFU",{sfu:data.peerId,data2: data2});
                                 
-                            // io.to(targetSocketId).emit("send_peer_stream", data2);
-                            // remains = remains - 1; 
 
 
                             let targetSocketId = socketIdMapping[p];
@@ -2116,7 +2059,6 @@ io.on("connection", (socket) => {
                 logger.warn("this sfu does not have available peer connections remaining",{
                     peerId:data.peerId,
                     maxConnectedPeers: peers[data.peerId].capabilities.maxConnectedPeers,
-                    //currConnPeers:currConnPeers
                 })
             }
         }
@@ -2127,57 +2069,28 @@ io.on("connection", (socket) => {
 
     });
 
-    // socket.on("cloned_stream", async data => {
-    //     // logger.info("peer_webrtc_message",{data:data});
-    //     logger.info("cloned_stream -- starting...",{data:data});
 
-    //         let targetSocketId = socketIdMapping[data.target];
 
-    //         let data2 = {
-    //             peerId: data.peerId,
-    //             originPeerId:data.originPeerId,
-    //             originStreamId: data.originStreamId,
-    //             streamId: data.streamId
-    //         };
 
-    //         let peer = await memoryDBAPI.findById("session_peers",data.peerId);
 
-    //         if(!peer.upstream){
-    //             peer.upstream = {};
-    //         }
     
-    //         if(!peer.upstream[data.target]){
-    //             peer.upstream[data.target] = {};
-    //         }
     
-    //         peer.upstream[data.target][data.streamId] = {
-    //             originPeerId:data.originPeerId,
-    //             originStreamId:data.originStreamId
-    //         }
     
-    //         await memoryDBAPI.updateMergeById("session_peers", data.peerId, { upstream: peer.upstream });
 
-    //         logger.info("cloned_stream -- sending cloned_stream event to target peer",{sfu:data.peerId,data2: data2});
 
-    //         io.to(targetSocketId).emit("cloned_stream", data2);
 
-    //     return true;
 
-    // });
 
 
     socket.on("end_of_stream_relay_chain", async data => {
-        // logger.info("peer_webrtc_message",{data:data});
         logger.info("end_of_stream_relay_chain -- starting...",{data:data});
 
-            //let peer = await memoryDBAPI.findById("session_peers",data.peerId);
             let peers = await memoryDBAPI.queryCollection("session_peers", [
                 { "field": "session_id", "operator": "==", "value": data.sessionId }
             ]);
 
             let lastSFU = getLastSFU(peers);
             let originPeer = peers[data.originPeerId];
-            //let originSFU = peers[originPeer.assignedSFU];
 
             logger.info("end_of_stream_relay_chain -- lastSFU and originPeer ",{lsfu:lastSFU,oPeer:originPeer});
 
@@ -2210,26 +2123,13 @@ io.on("connection", (socket) => {
             { "field": "session_id", "operator": "==", "value": data.sessionId }
         ]);
 
-        //getConnectedStreamsPerSFU(data.peerId,peers);
 
         let candidatePeerIds = Object.keys(peers).filter(p => {
-            //logger.info("peer_stream_requested -- filtering peers ",{p: p, currPeer: peers[p] });
-            // if(peers[p].sfu &&  p !== data.peerId && p !== data.target && peers[p] && peers[p].totalConnectedStreams && peers[p].totalConnectedStreams.indexOf(data.streamId) !== -1){
                 if(peers[p].sfu &&  p !== data.peerId && p !== data.target && peers[p] && peer.streamAlreadyLoaded(peers[p],data.target,data.streamId)){
                 return true;
             }
         })
-        // .filter(sfu => {
-        //     logger.debug("peer_stream_requested -- filtering out maxRelay",{
-        //         sfu:sfu,
-        //         currConn:peers[sfu].totalConnectedStreams ? peers[sfu].totalConnectedStreams.length: null,
-        //         maxRelay:peers[sfu].maxRelay
-        //     })
-        //     return peers[sfu].totalConnectedStreams.length < peers[sfu].maxRelay
-        // })
         .sort((a,b) => {
-            // let aQty = peers[a].totalConnectedStreams ? peers[a].totalConnectedStreams.length: 0;
-            // let bQty = peers[b].totalConnectedStreams ? peers[b].totalConnectedStreams.length: 0;
             let aQty = peers[a].upstream ? countUpstreamPeers(peers[a].upstream): 0;
             let bQty = peers[b].upstream ? countUpstreamPeers(peers[b].upstream): 0;
             logger.info("peer_stream_requested -- sorting peers ",{a: a,b:b,aQty:aQty,bQty:bQty,peers: JSON.stringify(peers,null,2)});
@@ -2267,21 +2167,12 @@ io.on("connection", (socket) => {
 
 
 
-        // let peer = await memoryDBAPI.findById("session_peers", data.peerId);
 
-        // if(peer && peer.assignedSFU){
 
-        //     let targetSocketId = socketIdMapping[peer.assignedSFU];
 
-        //     data.targetLocalStreams = peers[data.target].localStreams;
 
-        //     logger.info("peer_stream_requested -- sending send_peer_stream to SFU to ask for target's streams",{peerId: data.peerId,peerSFU:peer.assignedSFU,data: data});
 
-        //     io.to(targetSocketId).emit("send_peer_stream", data);
 
-        // }else{
-        //     logger.warn("peer_stream_requested -- could not find peer or this peer does not have an SFU assigned yet",{data:data,peer:peer});
-        // }
         
 
         return true;

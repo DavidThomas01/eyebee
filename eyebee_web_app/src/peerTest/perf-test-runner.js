@@ -50,7 +50,6 @@ class PerformanceTestRunner {
     }
 
     runCPUTest(baseNumber){
-        console.debug("perf-test-runner -- running CPU Test",{baseNumber: baseNumber});
         let prom = new Promise((resolve,reject) => {
 
             let testResult = null;
@@ -59,21 +58,17 @@ class PerformanceTestRunner {
                 this._cpuTest(baseNumber || 5);
             })
             .on('cycle', (event) => {
-                console.debug("perf-test-runner -- CPU Test cycle finished",{stats: event.target});
                 testResult = event.target;
             })
             .on('complete', () => {
-                console.debug("perf-test-runner -- finished CPU Test successfully",{baseNumber: baseNumber});
                 testResult.name = "CPU";
                 testResult.value = testResult.stats.mean*100;
                 resolve(testResult);
             })
             .on('error',error => {
-                console.debug("perf-test-runner -- finished CPU Test with error",{error: error});
                 reject(error);
             })
             .on('abort',error => {
-                console.debug("perf-test-runner -- CPU Test aborted",{error: error});
                 reject(error);
             })
             .run({ 'async': true });
@@ -83,7 +78,6 @@ class PerformanceTestRunner {
     }
 
     runLatencyTest(abortController,abortTimeout){
-        console.debug("perf-test-runner -- running Latency Test");
         let prom = new Promise((resolve,reject) => {
 
             let testResult = null;
@@ -104,24 +98,19 @@ class PerformanceTestRunner {
                 }
             })
             .on('cycle', (event) => {
-                console.debug("perf-test-runner -- Latency Test cycle finished",{stats: event.target});
                 testResult = event.target;
             })
             .on('complete', () => {
-                console.debug("perf-test-runner -- finished Latency Test successfully");
-                console.log(testResult);
                 testResult.name = "Latency";
                 testResult.unit = "ms";
                 testResult.value = Math.round(testResult.stats.mean*1000);
                 resolve(testResult);
             })
             .on('error',error => {
-                console.debug("perf-test-runner -- finished Latency Test with error",{error: error,string:error});
                 reject(error);
             })
             .on('abort',error => {
                 abortController.abort();
-                console.debug("perf-test-runner -- Latency Test aborted",{error: error});
                 reject(error);
             })
             .run({ 'async': true });
@@ -131,7 +120,6 @@ class PerformanceTestRunner {
     }
 
     runGPUTest(matrixSize){
-        console.debug("perf-test-runner -- running GPU Test",{matrixSize: matrixSize});
         let prom = new Promise((resolve,reject) => {
 
             let testResult = null;
@@ -140,21 +128,17 @@ class PerformanceTestRunner {
                 this._gpuTest(this.gpu,matrixSize || 256);
             })
             .on('cycle', (event) => {
-                console.debug("perf-test-runner -- GPU Test cycle finished",{stats: event.target});
                 testResult = event.target;
             })
             .on('complete', () => {
-                console.debug("perf-test-runner -- finished GPU Test successfully",{matrixSize: matrixSize});
                 testResult.name = "GPU";
                 testResult.value = testResult.stats.mean*100;
                 resolve(testResult);
             })
             .on('error',error => {
-                console.debug("perf-test-runner -- finished GPU Test with error",{error: error});
                 reject(error);
             })
             .on('abort',error => {
-                console.debug("perf-test-runner -- GPU Test aborted",{error: error});
                 reject(error);
             })
             .run({ 'async': true });
@@ -165,7 +149,6 @@ class PerformanceTestRunner {
 
     async runAllTests(progressCallback){
         progressCallback && progressCallback(0);
-        // console.debug("perf-test-runner -- starting runAllTests");
          let testResults = {};
         let cpuRes = await this.runCPUTest();
         progressCallback && progressCallback(25);
@@ -187,9 +170,6 @@ class PerformanceTestRunner {
         testResults[latencyTest.name] = latencyTest;
        
 
-        // let gpuRes = await this.runGPUTest();
-        // progressCallback && progressCallback(60);
-        // testResults[gpuRes.name] = gpuRes;
         let speedTestRes = {
             download:{
                 name:"Download",
@@ -203,16 +183,13 @@ class PerformanceTestRunner {
         try{
             speedTestRes = await this.speedTest.runTest(30000);
         }catch(err){
-            //speedTestRes = await this.speedTest.runTest(30000);
             console.error(err);
         }
         
         progressCallback && progressCallback(100);
-        console.log("speedtest response en runner",{res:speedTestRes});
         testResults["download"] = speedTestRes.download; 
         testResults["upload"] = speedTestRes.upload;
 
-        console.debug("perf-test-runner -- runAllTests finished");
         return testResults;
         
 

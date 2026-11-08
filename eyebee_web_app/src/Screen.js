@@ -31,10 +31,12 @@ class Screen {
                 this.displayOptions = displayOptions;
                 return this.stream;
             }else{
+                // eslint-disable-next-line no-throw-literal
                 throw "SCREEN_ALREADY_STARTED";
             }
             
         }else{
+            // eslint-disable-next-line no-throw-literal
             throw "USERMEDIA_NOT_AVAILABLE";
         }
     }

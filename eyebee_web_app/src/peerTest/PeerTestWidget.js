@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import { Close, LocalActivity, PanTool, Send } from "@mui/icons-material";
 import {
-    CircularProgress,
-    Box,
-    ThemeProvider,
     StyledEngineProvider,
     CssBaseline,
     Fade,
@@ -42,26 +38,37 @@ const useStyles = makeStyles(theme => ({
 }));
 
 function CircularProgressWithLabel(props) {
+    const value = Math.round(props.value || 0);
+    const ring = `conic-gradient(${props.theme.palette.primary.main} ${value * 3.6}deg, ${props.theme.palette.divider} 0deg)`;
+    const mask = "radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px))";
+
     return (
-        <Box position="relative" display="flex" >
-            <CircularProgress variant="determinate" {...props} />
-            <Box
-                top={0}
-                left={0}
-                bottom={0}
-                right={0}
-                position="absolute"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-            >
+        <div style={{ position: "relative", width: 50, height: 50 }}>
+            <div style={{
+                width: 50,
+                height: 50,
+                borderRadius: "50%",
+                background: ring,
+                WebkitMask: mask,
+                mask,
+            }} />
+            <div style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                bottom: 0,
+                right: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+            }}>
                 <p style={{
+                    margin: 0,
+                    fontSize: 12,
                     color: props.theme.palette.primary.main,
-                }}>{`${Math.round(
-                    props.value,
-                )}%`}</p>
-            </Box>
-        </Box>
+                }}>{`${value}%`}</p>
+            </div>
+        </div>
     );
 }
 
@@ -69,11 +76,9 @@ const PeerTestWidget = (props) => {
 
     const classes = useStyles();
     const theme = useTheme();
-    const [perfRunner, setPerfRunner] = useState(null);
     const [progress, setProgress] = useState(0);
     const [testResults, setTestResults] = useState(null);
     const [running, setRunning] = useState(false);
-    const [error, setError] = useState(null);
 
     useEffect(() => {
        
@@ -81,7 +86,7 @@ const PeerTestWidget = (props) => {
         if(!props.disabled){
             // GPU.js library is not loaded (commented out in index.html)
             const gpu = null;
-            let suite = new window.Benchmark.Suite;
+            let suite = new window.Benchmark.Suite();
             let speedTest = new SpeedTest();
     
             let perfRunner = new PerformanceTestRunner(gpu,window.Benchmark, suite, speedTest,AbortController,props.abortTimeout || 5000);
@@ -92,7 +97,6 @@ const PeerTestWidget = (props) => {
             runTests(perfRunner, wrtcTest).then(results => {
     
     
-                console.debug("runTest final results", { ts: results });
                 setTestResults(results);
                 setRunning(false);
                 props.onTestFinished && props.onTestFinished(results);
@@ -124,39 +128,14 @@ const PeerTestWidget = (props) => {
     
     
                 };
-                setError(err);
                 setRunning(false);
                 console.error(err);
                 setTestResults(mockResults);
-                //props.onTestError && props.onTestError(error);
                 props.onTestFinished && props.onTestFinished(mockResults);
             });
         }else{
             //return mock test results to speed up testing
-            console.debug("using mock testing results as testing is disabled",{props:props});
             
-            // {
-            //     CPU: {
-            //         name: "CPU",
-            //         value: 2
-            //     },
-
-            //     connectionType:
-            //     {
-            //         name: "Connection",
-            //         value: "STUN"
-            //     },
-            //     download: {
-            //         name: "Download",
-            //         value: 10
-            //     },
-
-            //     upload: {
-            //         name: "Upload",
-            //         value: 1
-            //     }
-
-            // };
            
 
             if(props.forcedScores){
@@ -195,6 +174,7 @@ const PeerTestWidget = (props) => {
         }
 
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.disabled,props.forcedScores]);
 
     if(props.disabled){
@@ -222,10 +202,8 @@ const PeerTestWidget = (props) => {
         };
         if (type === "STUN") {
 
-            console.debug("stun NAT test succeeded, this peer will connect through STUN", { result: type });
         } else {
 
-            console.debug("stun NAT test failed, this peer will connect through TURN", { result: type });
         }
 
         return results;
@@ -235,9 +213,8 @@ const PeerTestWidget = (props) => {
 
     return (
         <StyledEngineProvider injectFirst>
-            (<ThemeProvider theme={theme}>
-                <CssBaseline />
-                <div className={classes.mainBox}>
+            <CssBaseline />
+            <div className={classes.mainBox}>
 
                     <Collapse in={true} collapsedSize="3em" >
                         {
@@ -325,11 +302,13 @@ const PeerTestWidget = (props) => {
                                 progress < 100 ?
                                     (
                                         <Fade in={progress < 100} >
-                                            <CircularProgressWithLabel value={progress} theme={theme} size={50} />
+                                            <div>
+                                                <CircularProgressWithLabel value={progress} theme={theme} size={50} />
+                                            </div>
                                         </Fade>
                                     )
                                     :
-                                    (<div />)
+                                    <div />
                             }
 
                             
@@ -340,8 +319,7 @@ const PeerTestWidget = (props) => {
 
                     </Collapse>
 
-                </div>
-            </ThemeProvider>)
+            </div>
         </StyledEngineProvider>
     );
 };

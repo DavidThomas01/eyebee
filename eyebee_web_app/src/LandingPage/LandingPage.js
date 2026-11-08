@@ -1,145 +1,181 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React from "react";
 
+import { CssBaseline, useMediaQuery } from "@mui/material";
+import { ThemeProvider, StyledEngineProvider } from "@mui/material/styles";
+import makeStyles from "@mui/styles/makeStyles";
+import { useNavigate } from "react-router-dom";
 
-import { CssBaseline, Typography, adaptV4Theme } from "@mui/material";
-
-import { createTheme, ThemeProvider, StyledEngineProvider } from '@mui/material/styles';
-
-import makeStyles from '@mui/styles/makeStyles';
-
-import logoEyeBee from "./../img/logo_eyebee_fondo_negrov2.jpg";
-
+import logoEyeBee from "./../img/logo_eyebee.png";
+import mainTheme from "./../MainTheme";
 import DemoRoomForm from "./DemoRoomForm";
-
-const theme = createTheme(adaptV4Theme({
-    palette: {
-        background: {
-            default: "#000",
-        },
-        primary: {
-            main: "#F29F39",
-            contrastText: "#ffffff"
-        },
-        secondary: {
-            main: "#fafafa",
-            contrastText: "#8E8E8E"
-        },
-        action: {
-            backgroundColor: "#aaaaaa",
-            selected: "#2D2D2D"
-        },
-        lighterBg: {
-            main: "#292929"
-        }
-    },
-    actionBtn: {
-        backgroundColor: "#212121",
-        margin: "0.5em",
-    },
-    defaultIcon: {
-        fontSize: "1.5em"
-    },
-    typography: {
-        fontSize: "0.9em"
-    }
-}));
-
+import MobileLandingPage from "../MobileLanding/MobileLandingPage";
 
 const useStyles = makeStyles(theme => ({
-
-    mainBox: {
+    page: {
+        minHeight: "100dvh",
         display: "flex",
-        alignItems: "flex-start",
-        justifyContent: "flex-start",
         flexDirection: "column",
+        padding: "24px 20px 40px",
+        backgroundColor: theme.palette.background.default,
+        color: theme.palette.text.primary,
+        [theme.breakpoints.up("md")]: {
+            padding: "40px 40px 48px",
+        },
+    },
+    header: {
         width: "100%",
-        color: "#424242",
-        flex: "2"
-    },
-    logoBox: {
+        maxWidth: "1120px",
+        margin: "0 auto 32px",
         display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        width:"100%",   
-        margin: "1em 0"
+        justifyContent: "flex-end",
     },
-    manifestoBox:{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        width:"100%",
-        textAlign:"center",
-        margin: "1em 0",
-        padding:"1em"
+    logo: {
+        width: "96px",
+        height: "auto",
+        [theme.breakpoints.down("sm")]: {
+            width: "72px",
+        },
     },
-    manifesto:{
-        fontSize: "1.2em",
-        fontStyle:"italic"
-    },
-    demoRoomBox:{
-        display: "flex",
-        alignItems: "flex-start",
-        justifyContent: "flex-start",
-        flexDirection: "column",
+    shell: {
         width: "100%",
-        flex: "2"
-    }
+        maxWidth: "1120px",
+        margin: "0 auto",
+        flex: 1,
+        display: "grid",
+        gridTemplateColumns: "minmax(0, 1fr)",
+        alignContent: "center",
+        gap: theme.spacing(4),
+        [theme.breakpoints.up("md")]: {
+            gridTemplateColumns: "minmax(0, 1fr) minmax(0, 480px)",
+            gap: theme.spacing(8),
+        },
+    },
+    intro: {
+        minWidth: 0,
+        alignSelf: "start",
+    },
+    title: {
+        maxWidth: "14ch",
+        fontSize: "var(--text-display)",
+        color: theme.palette.text.primary,
+    },
+    manifesto: {
+        maxWidth: "34ch",
+        marginTop: theme.spacing(3),
+        fontSize: "var(--text-lead)",
+        lineHeight: 1.6,
+        color: theme.palette.primary.main,
+        fontStyle: "italic",
+    },
+    steps: {
+        listStyle: "none",
+        padding: 0,
+        margin: `${theme.spacing(3)} 0 0`,
+        display: "flex",
+        flexDirection: "column",
+        gap: "var(--space-xs)",
+    },
+    step: {
+        display: "flex",
+        alignItems: "baseline",
+        gap: "var(--space-sm)",
+        fontSize: "var(--text-sm)",
+        lineHeight: 1.5,
+        color: theme.palette.text.secondary,
+    },
+    stepNumber: {
+        minWidth: "16px",
+        color: theme.palette.primary.main,
+        fontWeight: 700,
+        fontVariantNumeric: "tabular-nums",
+    },
+    formColumn: {
+        minWidth: 0,
+        width: "100%",
+        alignSelf: "start",
+    },
+    footer: {
+        width: "100%",
+        maxWidth: "1120px",
+        margin: `${theme.spacing(5)} auto 0`,
+        paddingTop: theme.spacing(3),
+        borderTop: `1px solid ${theme.palette.divider}`,
+        color: theme.palette.text.secondary,
+        fontSize: "var(--text-sm)",
+        lineHeight: 1.5,
+    },
 }));
 
-const LandingPage = props => {
-
+const LandingPage = () => {
     const classes = useStyles();
-
-    useEffect(() => {
-
-    }, []);
+    const navigate = useNavigate();
+    const isMobile = useMediaQuery(mainTheme.breakpoints.down("md"), { noSsr: true });
 
     const openRoomURL = url => {
-        var win = window.open(url, '_blank');
-        win.focus();
-    }
+        try {
+            const target = new URL(url, window.location.origin);
+            if (target.origin === window.location.origin) {
+                navigate(`${target.pathname}${target.search}${target.hash}`);
+            } else {
+                window.location.assign(target.href);
+            }
+        } catch (error) {
+            window.location.assign(url);
+        }
+    };
 
     const copyLinkToClipboard = async url => {
-        await navigator.clipboard.writeText(url);
-        return true;
+        try {
+            await navigator.clipboard.writeText(url);
+            return true;
+        } catch (error) {
+            return false;
+        }
+    };
+
+    if (isMobile) {
+        return (
+            <StyledEngineProvider injectFirst>
+                <ThemeProvider theme={mainTheme}>
+                    <CssBaseline />
+                    <MobileLandingPage onOpenLink={openRoomURL} />
+                </ThemeProvider>
+            </StyledEngineProvider>
+        );
     }
 
     return (
         <StyledEngineProvider injectFirst>
-            (<ThemeProvider theme={theme}>
+            <ThemeProvider theme={mainTheme}>
                 <CssBaseline />
-                <div className={classes.mainBox}>
+                <main className={classes.page}>
+                    <header className={classes.header}>
+                        <img className={classes.logo} src={logoEyeBee} alt="Eyebee" />
+                    </header>
 
-                    <div className={classes.logoBox}>
-                        <img style={{
-                            height: "10em",
-                            width: "auto"
-                        }} src={logoEyeBee} />
+                    <div className={classes.shell}>
+                        <section className={`${classes.intro} reveal`}>
+                            <h1 className={classes.title}>Start a room</h1>
+                            <p className={classes.manifesto}>
+                                Our principles act as tools for thinking, communication, and decentralized decision making
+                            </p>
+                            <ol className={classes.steps}>
+                                <li className={classes.step}><span className={classes.stepNumber}>1</span>Choose a room size.</li>
+                                <li className={classes.step}><span className={classes.stepNumber}>2</span>Start the room and copy the link.</li>
+                                <li className={classes.step}><span className={classes.stepNumber}>3</span>Meet in your browser.</li>
+                            </ol>
+                        </section>
+
+                        <section className={`${classes.formColumn} reveal reveal-2`} aria-label="Room setup">
+                            <DemoRoomForm onOpenLink={openRoomURL} onCopyLink={copyLinkToClipboard} />
+                        </section>
                     </div>
-                    <div className={classes.manifestoBox}>
-                        <Typography color="primary" className={classes.manifesto}>
-                        Our principles act as tools for thinking, communication, and decentralized decision making
-                        </Typography>
-                        
-                    </div>
 
-                    <div className={classes.demoRoomBox}>
-                       <DemoRoomForm onOpenLink={openRoomURL} onCopyLink={copyLinkToClipboard}></DemoRoomForm>
-                        
-                    </div>
-
-
-                    
-                </div>
-
-            </ThemeProvider>)
+                    <p className={classes.footer}>You will check your camera and microphone before joining.</p>
+                </main>
+            </ThemeProvider>
         </StyledEngineProvider>
     );
-
-}
-
-
+};
 
 export default LandingPage;

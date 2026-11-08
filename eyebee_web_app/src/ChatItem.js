@@ -2,7 +2,7 @@ import React,{useEffect, useState} from "react";
 
 import { ThemeProvider, StyledEngineProvider, useTheme } from '@mui/material/styles';
 import makeStyles from '@mui/styles/makeStyles';
-import {CssBaseline,IconButton,useMediaQuery} from "@mui/material";
+import {CssBaseline} from "@mui/material";
 import HexagonalAvatarWidget from "./HexagonalAvatarWidget";
 
 const useStyles = makeStyles(theme => ({
@@ -14,12 +14,6 @@ const useStyles = makeStyles(theme => ({
       width:"100%",
       borderRadius:"0.5em",
       padding:"0.5em"
-    },
-    actionsBox:{
-        display:"flex",
-        flex:"2",
-        alignItems:"center",
-        justifyContent:"flex-start"
     },
     label:{
         fontWeight:"bold",
@@ -38,33 +32,17 @@ const useStyles = makeStyles(theme => ({
 const ChatItem = (props) => {
     const theme = useTheme();
     const classes = useStyles();
-    const xsScreen = useMediaQuery(theme.breakpoints.down('sm'));
-    const [message,setMessage] = useState(null);
-    const [label,setLabel] = useState(null);
     const [user,setUser] = useState(null);
 
     useEffect(() => {
-        if(props.message){
-            setMessage(props.message);
-        }
-    },[props.message]);
-
-    useEffect(() => {
-        if(props.label){
-            setLabel(props.label);
-        }
-    },[props.label]);
-
-    useEffect(() => {
         if(props.user){
-            console.log("el user que pasa al chat item",{u:props.user});
             setUser(props.user);
         }
     },[props.user]);
 
     return (
         <StyledEngineProvider injectFirst>
-            (<ThemeProvider theme={theme} >
+            <ThemeProvider theme={theme} >
                 <CssBaseline/>
                 <div className={classes.mainBox}>
                     <div style={{
@@ -84,7 +62,7 @@ const ChatItem = (props) => {
 
                     </div>
                 </div>
-            </ThemeProvider>)
+            </ThemeProvider>
         </StyledEngineProvider>
     );
 };

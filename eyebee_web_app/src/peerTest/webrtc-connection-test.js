@@ -1,8 +1,4 @@
 class WebRTCConnectionTest {
-    constructor(){
-
-    }
-
     checkTurnOrStun(ICEServer, timeout){ 
         return new Promise(function(resolve, reject){
 
@@ -13,7 +9,7 @@ class WebRTCConnectionTest {
 
             setTimeout(function(){
                 if(promiseResolved){
-                    if (promiseResolved == 'STUN') resolve('STUN');
+                    if (promiseResolved === 'STUN') resolve('STUN');
                     return;
                 }
                 resolve(false);
@@ -32,8 +28,8 @@ class WebRTCConnectionTest {
             }, noop);    // create offer and set local description
             pc.onicecandidate = function(ice){  //listen for candidate events
             if( !ice || !ice.candidate || !ice.candidate.candidate)  return;
-            if (ice.candidate.candidate.indexOf('typ relay')!=-1) { promiseResolved = 'TURN'; resolve('TURN'); }
-            else if (!promiseResolved && (ice.candidate.candidate.indexOf('typ prflx')!=-1 || ice.candidate.candidate.indexOf('typ srflx')!=-1)){
+            if (ice.candidate.candidate.indexOf('typ relay')!==-1) { promiseResolved = 'TURN'; resolve('TURN'); }
+            else if (!promiseResolved && (ice.candidate.candidate.indexOf('typ prflx')!==-1 || ice.candidate.candidate.indexOf('typ srflx')!==-1)){
                 promiseResolved = 'STUN';
                 if (ICEServer.url.indexOf('turn:')!==0) resolve('STUN');
             }

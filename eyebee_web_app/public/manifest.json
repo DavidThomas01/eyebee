@@ -1,7 +1,13 @@
 {
-  "short_name": "EyeBee",
-  "name": "EyeBee",
+  "short_name": "Eyebee",
+  "name": "Eyebee",
   "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
     {
       "src": "favicon.ico",
       "sizes": "64x64 32x32 24x24 16x16",
@@ -10,16 +16,18 @@
     {
       "src": "eyebee-logo-192x192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any"
     },
     {
       "src": "eyebee-logo-512x512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#212121",
-  "background_color": "#212121"
+  "theme_color": "#000000",
+  "background_color": "#000000"
 }

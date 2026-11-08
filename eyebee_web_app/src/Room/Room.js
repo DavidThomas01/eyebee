@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 import "./HexGrid.css";
 
-import { ThemeProvider, StyledEngineProvider, CssBaseline, useMediaQuery, Slide } from "@mui/material";
-import { useTheme } from '@mui/material/styles';
+import { ThemeProvider, StyledEngineProvider, CssBaseline, useMediaQuery } from "@mui/material";
+import { useTheme, createTheme, adaptV4Theme } from '@mui/material/styles';
+import PersonOutlined from "@mui/icons-material/PersonOutlined";
+import PersonAddOutlined from "@mui/icons-material/PersonAddOutlined";
+import CloseIcon from "@mui/icons-material/Close";
 
 import makeStyles from '@mui/styles/makeStyles';
-
-import RemotePeerWidget from "../RemotePeerWidget";
 
 import MediaPlayerWidget from "../MediaPlayerWidget";
 import RoomActionsWidget from "./RoomActionsWidget";
@@ -21,6 +22,44 @@ import Screen from "../Screen";
 import ScreenView from "../ScreenView";
 import RoomGrid from "../RoomGrid";
 import CreateNewSubRoom from "./CreateNewSubRoom";
+import MobileRoomBar from "./MobileRoomBar";
+import RoomOptionsSheet from "./RoomOptionsSheet";
+import RoomInviteSheet from "./RoomInviteSheet";
+import ConnectionStatusSheet from "./ConnectionStatusSheet";
+import MobileParticipantsSheet from "./MobileParticipantsSheet";
+import ConnectionHexes from "../PreJoin/ConnectionHexes";
+
+const mobileTheme = createTheme(adaptV4Theme({
+  palette: {
+    mode: "dark",
+    background: {
+      default: "#000"
+    },
+    primary: {
+      main: "#F2C600",
+      contrastText: "#17130A"
+    },
+    secondary: {
+      main: "#FAFAFA",
+      contrastText: "#17130A"
+    },
+    text: {
+      primary: "#F5F1EC",
+      secondary: "#A79F96"
+    },
+    divider: "#332E29",
+    lighterBg: {
+      main: "#1C1C1C"
+    },
+    action: {
+      backgroundColor: "#AAAAAA",
+      selected: "#2D2D2D"
+    }
+  },
+  typography: {
+    fontFamily: "var(--font-brand)"
+  }
+}));
 
 const useStyles = makeStyles(theme => ({
   mainBox: {
@@ -38,10 +77,6 @@ const useStyles = makeStyles(theme => ({
     width: "100%",
     flexDirection: "column",
     flex: "2"
-  },
-  peerItem: {
-    margin: "0.3em",
-    transition: "transform 0.2s ease-in-out"
   },
   sideBox: {
     display: "flex",
@@ -64,16 +99,198 @@ const useStyles = makeStyles(theme => ({
     justifyContent: "center",
     width: "100%"
   },
-  remoteMediaBox: {
+  mobilePage: {
+    "--color-focus": "var(--color-brand-yellow-strong)",
+    height: "100dvh",
+    minHeight: "100dvh",
+    width: "100%",
+    minWidth: 0,
     display: "flex",
-    position: "relative",
+    flexDirection: "column",
+    backgroundColor: "#000",
+    color: "#F5F1EC",
+    fontFamily: "var(--font-brand)",
+    overflow: "hidden"
+  },
+  mobileHeader: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "12px",
+    padding: "12px 16px",
+    paddingTop: "max(12px, env(safe-area-inset-top))",
+    backgroundColor: "#000"
+  },
+  mobileHeaderLeft: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    flex: 1,
+    minWidth: 0
+  },
+  mobileTitle: {
+    margin: 0,
+    minWidth: 0,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+    fontSize: "20px",
+    lineHeight: 1.2,
+    fontWeight: 800,
+    color: "#F5F1EC"
+  },
+  mobileHeaderRight: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    flexShrink: 0
+  },
+  mobileMark: {
+    width: "38px",
+    height: "17px",
+    display: "block",
+    flexShrink: 0
+  },
+  mobileMarkButton: {
+    display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
+    flexShrink: 0,
+    padding: 0,
+    border: 0,
+    background: "transparent",
+    cursor: "pointer"
+  },
+  mobileCount: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "4px",
+    height: "36px",
+    padding: "0 10px",
+    border: 0,
+    borderRadius: "10px",
+    backgroundColor: "var(--color-brand-white)",
+    color: "var(--color-brand-ink)",
+    fontFamily: "var(--font-brand)",
+    fontSize: "14px",
+    fontWeight: 700,
+    fontVariantNumeric: "tabular-nums",
+    cursor: "pointer",
+    "&:active": {
+      backgroundColor: "var(--color-brand-line)"
+    }
+  },
+  mobileInvite: {
+    width: "40px",
+    height: "40px",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    border: 0,
+    borderRadius: "10px",
+    backgroundColor: "#FFFFFF",
+    color: "#111111",
+    cursor: "pointer",
+    "&:active": {
+      backgroundColor: "#E0E0E0"
+    }
+  },
+  mobileMain: {
+    flex: 1,
+    minHeight: 0,
+    position: "relative",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+    padding: "12px"
+  },
+  mobileSelf: {
+    position: "relative",
     width: "100%",
-    flex: "2",
-    overflow: "auto"
+    height: "100%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  mobileSideOverlay: {
+    position: "fixed",
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: "calc(76px + env(safe-area-inset-bottom))",
+    zIndex: 450,
+    backgroundColor: "rgba(0, 0, 0, 0.55)"
+  },
+  mobileSideSheet: {
+    position: "fixed",
+    left: "12px",
+    right: "12px",
+    top: "max(72px, calc(env(safe-area-inset-top) + 64px))",
+    bottom: "calc(84px + env(safe-area-inset-bottom))",
+    zIndex: 460,
+    display: "flex",
+    flexDirection: "column",
+    backgroundColor: "#1C1C1C",
+    border: "1px solid #2E2E2E",
+    borderRadius: "18px",
+    overflow: "hidden"
+  },
+  mobileSideHead: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "12px",
+    padding: "12px 16px",
+    borderBottom: "1px solid #2E2E2E"
+  },
+  mobileSideTitle: {
+    margin: 0,
+    fontSize: "18px",
+    lineHeight: 1.2,
+    fontWeight: 800,
+    color: "#F5F1EC"
+  },
+  mobileClose: {
+    width: "36px",
+    height: "36px",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+    padding: 0,
+    border: 0,
+    background: "transparent",
+    color: "#F5F1EC",
+    cursor: "pointer"
   }
 }));
+
+const getPlayerSize = (userType, smScreen, mdScreen, lgScreen) => {
+  let size = 98;
+
+  if (smScreen) {
+    size = 138
+  }
+
+  if (mdScreen) {
+    size = 176
+  }
+
+  if (lgScreen) {
+    size = 214
+  }
+
+  if (userType === "presenter") {
+    size = Math.ceil(size * 0.60);
+  }
+
+  if (userType === "spectator") {
+    size = Math.ceil(size * 0.40);
+  }
+
+  return size;
+}
 
 const Room = (props) => {
   const classes = useStyles();
@@ -83,10 +300,8 @@ const Room = (props) => {
   const [isOwner, setIsOwner] = useState(false);
   const [isPresenter, setIsPresenter] = useState(false);
   const [isMainPresenter, setIsMainPresenter] = useState(false);
-  const [peerJoined, setPeerJoined] = useState(false);
   const [roomUsers, setRoomUsers] = useState({});
   const [webrtcManager, setWebRTCManager] = useState(null);
-  const [startupFinished, setStartupFinished] = useState(false);
   const [remotePeerStreams, setRemotePeerStreams] = useState({});
   const [presentationRequested, setPresentationRequested] = useState(false);
 
@@ -101,6 +316,13 @@ const Room = (props) => {
     opened: false,
     section: ""
   });
+  const [optionsOpen, setOptionsOpen] = useState(false);
+  const [connectionLevel, setConnectionLevel] = useState(3);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [connectionOpen, setConnectionOpen] = useState(false);
+  const leavingRef = useRef(false);
+  const [localCameraOn, setLocalCameraOn] = useState(props.localCamera ? props.localCamera.isVideoEnabled() : false);
+  const [localMicOn, setLocalMicOn] = useState(props.localCamera ? props.localCamera.isAudioEnabled() : false);
 
   const xsScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const smScreen = useMediaQuery(theme.breakpoints.up("sm"));
@@ -115,10 +337,8 @@ const Room = (props) => {
   const [screen, setScreen] = useState(null);
   const [currentSection, setCurrentSection] = useState("main");
   const [selectedScreenPresenter, setSelectedScreenPresenter] = useState(null);
-  const [angle, setAngle] = useState(45);
-  const [row, setRow] = useState(1);
 
-  const [defaultVideoConstraints, setdefaultVideoConstraints] = useState({
+  const [defaultVideoConstraints] = useState({
     height: {
       ideal: 240,
       max: 480
@@ -134,7 +354,7 @@ const Room = (props) => {
     }
   });
 
-  const [lowVideoConstraints, setlowVideoConstraints] = useState({
+  const [lowVideoConstraints] = useState({
     height: {
       ideal: 240,
       max: 480
@@ -153,7 +373,6 @@ const Room = (props) => {
 
 
   const onUserJoined = data => {
-    console.log("entró a onUserJoined", { rps: remotePeerStreams });
     setRoomUsers({
       ...data.users
     });
@@ -166,14 +385,12 @@ const Room = (props) => {
 
   const onPeerMediaChanged = (data, peer) => {
 
-    console.debug("onPeerMediaChanged", { data: data, peer: peer, ru: roomUsers, rps: remotePeerStreams });
 
 
     if (data.type === "deleted") {
 
 
       if(data.label === "screen" && selectedScreenPresenter && selectedScreenPresenter.id === peer.id){
-        console.debug("onPeerMediaChanged -- selectedScreenPresenter is the same as this peer... back to room view",{selectedScreenPresenter,peer,data});
 
         setOldScreenPresenter(null);  
         setCurrentSection("main");
@@ -184,27 +401,15 @@ const Room = (props) => {
       let streamToRemove = remotePeerStreams[peer.id][data.streamId];
       if (streamToRemove) {
 
-        console.debug("onPeerMediaChanged -- stream to remove found", { rs: roomUsers, rps: remotePeerStreams, streamToRemove: streamToRemove })
 
-        //remove senders that may have been retransmitting this stream
         webrtcManager.removeMediaFromPCs(streamToRemove);
 
       }
-      // let linkedStreamIds = webrtcManager.findPeerStreamId(peer.id,data.streamId);
 
-      // linkedStreamIds.forEack(sId => {
 
-      //   let streamToRemove = remotePeerStreams[peer.id][sId];
-      //   //let streamToRemove = remotePeerStreams[peer.id][data.streamId];
-      //   if(streamToRemove){
 
-      //     console.debug("onPeerMediaChanged -- stream to remove found",{rs:roomUsers, rps: remotePeerStreams,streamToRemove:streamToRemove})
-      //     //remove senders that may have been retransmitting this stream
-      //     webrtcManager.removeMediaFromPCs(streamToRemove);
 
-      //   }
 
-      // });
       
     }else{
       if(roomUsers[props.userData.peerId].assignedSFU === peer.id && data.label !== "camera" ){
@@ -222,14 +427,11 @@ const Room = (props) => {
   };
 
   const onSFUAssigned = async (peer, users) => {
-    console.log("onSFUAssigned", { ru: roomUsers, peer: peer,rru:users });
-    //roomUsers[peer.id].assignedSFU = peer.assignedSFU;
 
     if (peer.id === props.userData.peerId) {
 
       let sfuPeer = users[peer.assignedSFU];
 
-      console.debug("peer assigned as sfu for this peer", { peer: peer, sfu: sfuPeer });
 
       webrtcManager.assignedSFU = sfuPeer;
 
@@ -238,19 +440,15 @@ const Room = (props) => {
 
       let peerConnExists = webrtcManager.getPCToPeer(peer.assignedSFU);
 
-      console.log("onSFUAssigned -- peerConnExists Peer: " + peer.id + " SFU: " + peer.assignedSFU + " exists: " + peerConnExists)
       if (peerConnExists) {
-        console.log("onSFUAssigned -- enters addLocalStreamsToPC: " + peer.id + " SFU: " + peer.assignedSFU);
         webrtcManager.addLocalStreamsToPC(peer.id, peer.assignedSFU);
       } else {
-        console.log("onSFUAssigned -- enters requestPeerConnections: " + peer.id + " SFU: " + peer.assignedSFU);
         await requestPeerConnections(sfuPeer, webrtcManager);
         await webrtcManager.requestPeersStreams(users, props.userData.isOwner, props.userData.isPresenter);
       }
 
 
     } else {
-      console.log("updating peer's assigned SFU", { peerId: peer.id, sfu: peer.assignedSFU });
       webrtcManager.updatePeerAssignedSFU(peer.id, peer.assignedSFU);
     }
 
@@ -282,7 +480,6 @@ const Room = (props) => {
       });
 
       return () => {
-        //console.debug("effect callback de roomManager callbacks");
         roomManager.removeRoomEventCallbacks();
       }
 
@@ -291,6 +488,7 @@ const Room = (props) => {
 
 
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomManager, roomUsers, remotePeerStreams]);
 
   useEffect(() => {
@@ -301,14 +499,10 @@ const Room = (props) => {
         "onRemoteStreamRemoved": onRemoteStreamRemoved,
         "onClonedStreamsUpdated": onClonedStreamsUpdated,
         "onStreamLoaded":onStreamLoaded
-        //"onMPStreamLoaded":onMPStreamLoaded
       });
     }
 
-    return () => {
-      //console.debug("effect callback de webrtcManager callbacks");
-    }
-
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [webrtcManager, roomUsers, remotePeerStreams,oldScreenPresenter]);
 
   const onChatMessage = (msg, messages) => {
@@ -326,7 +520,6 @@ const Room = (props) => {
 
   const onNewPresenter = (newPresenter, updatedUserList) => {
 
-    console.log("llega a new presenter en room", { newPresenter: newPresenter, updatedUserList: updatedUserList });
 
     setRoomUsers({
       ...updatedUserList
@@ -335,7 +528,6 @@ const Room = (props) => {
   };
 
   const closePeerConnection = (peer) => {
-    //console.log("en closePeerConnection el valor de webrtcmanager",{webrtcManager:webrtcManager,peer:peer});
     webrtcManager.closePeerConnection(peer);
   }
 
@@ -348,7 +540,6 @@ const Room = (props) => {
       delete remotePeerStreams[peerId];
     }
 
-    console.log("deleteRemotePeerStreams rps state ", { rps: remotePeerStreams });
 
   }
 
@@ -360,15 +551,10 @@ const Room = (props) => {
 
     }
 
-    return () => {
-      //console.debug("effect callback de roomUsers");
-    }
-
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomUsers]);
 
   const onUserLeft = data => {
-    console.log("(Room) entrando a onUserLeft", { data: data, ru: roomUsers, rps: remotePeerStreams });
-    console.log(webrtcManager.remotePeers);
     closePeerConnection({
       peerId: data.userId
     },true);
@@ -387,26 +573,16 @@ const Room = (props) => {
     });
 
     if (webrtcManager.assignedSFU && data.userId === webrtcManager.assignedSFU.id) {
-      console.debug("onUserLeft -- my SFU is leaving the room," +
-        " reset my assignedSFU and ask for another one",
-        {
-          myId: props.userData.peerId, myself: roomUsers[props.userData.peerId],
-          leavingPeerId: data.userId
-        });
       webrtcManager.assignedSFU = null;
       delete roomUsers[props.userData.peerId].assignedSFU;
 
-      //props.roomManager.requestTargetSFU(props.userData.peerId,props.userData.roomId);
     }
 
-    console.log("(Room) saliendo a onUserLeft", { data: data, ru: roomUsers, rps: remotePeerStreams });
 
   };
 
   const onNewMainPresenter = (mainPresenterId, users) => {
 
-    console.log("estado de ru al actualizar con el nuevo main presenter",
-      { ru: users, mainPId: mainPresenterId });
 
       webrtcManager.updateMainPresenter(mainPresenterId);
 
@@ -415,7 +591,6 @@ const Room = (props) => {
   }
 
   const onUserPresentationRequest = (user, users) => {
-    console.debug("onUserPresentationRequest", { user: user, ru: users });
 
     setRoomUsers({
       ...users
@@ -425,14 +600,10 @@ const Room = (props) => {
 
   const onUserPresentationCancelled = (data, users) => {
 
-    console.debug("onUserPresentationCancelled", { data: data, users: users });
     if (users[data.userId]) {
 
-      console.log("el estado de isowner y ispresenter antes de preguntar para eliminarlo", { owner: isOwner, presenter: isPresenter });
-      //if I'm just a simple peer, disconnect from this former presenter and delete it from the room list
       if (!isOwner && !isPresenter) {
 
-        console.log("como este era un presentador, se elimina de los streams", { userId: data.userId });
         closePeerConnection({
           peerId: data.userId
         });
@@ -447,9 +618,7 @@ const Room = (props) => {
 
           props.localCamera.mute();
           applyLocalVideoConstraints(lowVideoConstraints).then(() => {
-            console.log("low video constraints applied successfully");
           }).catch(err => {
-            console.log("error when applying low constraints to localCamera", { error: err });
           });
 
         }
@@ -466,16 +635,13 @@ const Room = (props) => {
   };
 
   const onUserPresentationGranted = (data, users) => {
-    console.debug("onUserPresentationGranted", { data: data });
 
     if (data.target === peerId) {
       setPresentationRequested(false);
       setIsPresenter(true);
 
       applyLocalVideoConstraints(defaultVideoConstraints).then(() => {
-        console.log("default video constraints applied successfully");
       }).catch(err => {
-        console.log("error when applying default video constraints to localCamera", { error: err });
       });
 
     } else {
@@ -489,9 +655,7 @@ const Room = (props) => {
 
   };
 
-  // const onUsers = async users => {
 
-  // }
 
   const onUsers = async users => {
 
@@ -501,13 +665,10 @@ const Room = (props) => {
   };
 
   const removeConnectedSimplePeers = (users) => {
-    console.log("valor inicial de roomUsers y de isPresenter", { ru: users });
     Object.keys(users).forEach(u => {
       let user = users[u];
       if (user.id !== peerId) {
-        console.log("por analizar el peer si es comun", { peer: user, rpss: remotePeerStreams, rps: remotePeerStreams[user.id] });
         if (!user.owner && !user.presenter) {
-          console.log("ete es un peer comun, cerrando el peerconnection y eliminando el stream remoto", { peer: user });
           closePeerConnection({
             peerId: user.id
           });
@@ -521,7 +682,6 @@ const Room = (props) => {
 
     });
 
-    console.log("valor final de roomUsers y de isPresenter", { ru: users, isPresenter: isPresenter });
 
   }
 
@@ -530,20 +690,18 @@ const Room = (props) => {
       await props.localCamera.getStream().getVideoTracks()[0].applyConstraints(videoConstraints);
       return true;
     } else {
+      // eslint-disable-next-line no-throw-literal
       throw "NO_STREAM_IN_LOCAL_CAMERA";
     }
 
   }
 
   const onUserPresentationRemoved = (data, users) => {
-    console.debug("onUserPresentationRemoved", { data: data, users: users });
 
     if (data.target === peerId) {
       setPresentationRequested(false);
       setIsPresenter(false);
 
-      console.log("soy el mismo peer al que le revocaron la presentacion");
-      //close peer connections to the simple peers
 
       let rs = {
         ...roomUsers
@@ -556,9 +714,7 @@ const Room = (props) => {
       if(props.localCamera){
         props.localCamera.mute();
         applyLocalVideoConstraints(lowVideoConstraints).then(() => {
-          console.log("low video constraints applied successfully");
         }).catch(err => {
-          console.log("error when applying low constraints to localCamera", { error: err });
         }).finally(() => {
           removeConnectedSimplePeers(rs);
         });
@@ -568,10 +724,8 @@ const Room = (props) => {
 
 
     } else {
-      console.log("NO soy el mismo peer al que le revocaron la presentacion", { revokedPeerId: data.target });
 
       if (!isOwner && !isPresenter) {
-        console.log("soy peer comun, cerrando el peerconnection y eliminando el stream remoto", { peer: users[data.target] });
         closePeerConnection({
           peerId: data.target
         });
@@ -579,7 +733,6 @@ const Room = (props) => {
 
       }
 
-      console.log("el nuevo roomUsers despues de revocar la presentacion", { ru: roomUsers, rs: remotePeerStreams });
 
       setRoomUsers({
         ...users
@@ -592,46 +745,21 @@ const Room = (props) => {
   };
 
   const onRemoteTrack = (peerId, track, stream) => {
-    // console.debug("(Room) entraa onRemoteTrack", { rps: remotePeerStreams, newStream: stream });
     if (!remotePeerStreams[peerId]) {
       remotePeerStreams[peerId] = {};
     }
 
 
-    // if(remotePeerStreams[peerId][stream.id]){
-    //   return false;
-    // }
 
     remotePeerStreams[peerId][stream.id] = stream;
 
-    // if (!remotePeerStreams[peerId][stream.id]) {
-    //   remotePeerStreams[peerId][stream.id] = stream;
-    // }
 
     if (remotePeerStreams[peerId][stream.id].active) {
 
-      // console.debug("valor final de remotePeerStreams", {
-      //   rps: remotePeerStreams, peerId: peerId,
-      //   stream: stream, track: track,
-      //   tracks: remotePeerStreams[peerId][stream.id].getTracks()
-      // });
 
-      // let peerHasLocalStreams = roomUsers[peerId] && roomUsers[peerId].localStreams;
-      // let peerCurrStreamIsScreen = peerHasLocalStreams && roomUsers[peerId].localStreams[stream.id] && roomUsers[peerId].localStreams[stream.id].label === "screen";
 
-      // if (peerHasLocalStreams && peerCurrStreamIsScreen) {
-      //   //BUG: this opens the screen view again even if we navigate away from it
-      //   //need to improve this condition to only allow this transition when 
-      //   //the main presenter shares for the first time and we previously
-      //   // didn't go back to room view
-      //   goToScreen(roomUsers[peerId]);
-      // }
 
     } else {
-      console.debug("uno de los remote streams se desactivo...eliminando", {
-        rps: remotePeerStreams, peerId: peerId,
-        stream: stream
-      });
       delete remotePeerStreams[peerId][stream.id];
     }
 
@@ -640,19 +768,9 @@ const Room = (props) => {
     });
   }
 
-  const onMPStreamLoaded = (peerId, stream,streamLabel) => {
-    if( streamLabel === "screen"){
-
-      goToScreen(roomUsers[peerId])
-    }
-
-  }
-
   const onStreamLoaded = (peerId, stream,streamLabel) => {
     if( streamLabel === "screen"){
-      console.log("onStreamLoaded -- lo que vale el oldScreenPresenter",{currPresenter:peerId,stream,oldScreenPresenter});
         if(oldScreenPresenter&&!props.userData.sfu){
-          console.debug("onStreamLoaded -- already with a presenter sharing screen, disconnecting",{oldScreenPresenter,newPresenter:peerId});
           let currScreenStreamId = Object.keys(oldScreenPresenter.localStreams).find( ls => {
             return oldScreenPresenter.localStreams[ls].label === "screen";
           });
@@ -667,17 +785,9 @@ const Room = (props) => {
 
 
 
-      //goToScreen(roomUsers[peerId])
     }
-    // else{
-    //   remotePeerStreams[peerId][stream.id] = stream;
-    //   setRemotePeerStreams({
-    //     ...remotePeerStreams
-    //   });
-    // }
 
     if(streamLabel !== "camera" && roomUsers[peerId].mainPresenter){
-      console.log("onStreamLoaded -- Valor de currentSection en onStreamLoaded",{currentSection});
       if(currentSection !== "screen"){
         goToScreen(roomUsers[peerId])
       }
@@ -687,9 +797,7 @@ const Room = (props) => {
   }
 
   const onRemoteStreamRemoved = (peerId, streamObj) => {
-    console.log("entering onRemoteStreamRemoved", { peerId: peerId, streamObj: streamObj });
 
-    console.log("remote peer streams antes de remover el stream", { rps: remotePeerStreams });
     delete remotePeerStreams[peerId][streamObj.id];
     setRemotePeerStreams({
       ...remotePeerStreams
@@ -726,6 +834,7 @@ const Room = (props) => {
             && r !== assignedSFUPeer.id) {
             return true;
           }
+          return false;
         });
 
         Object.keys(roomUsers).forEach(p => {
@@ -738,76 +847,33 @@ const Room = (props) => {
               roomUsers[s].currConnectedPeers.push(p);
             }
 
-            //console.log("getConnectedPeersPerSFU -- el resultado de currconnectedPeers para esta sfu",{sfu:s,currconnPeers:sessionPeers[s].currConnectedPeers});
           });
 
 
         });
 
-        //filter out those SFUs that reached the max relay threshold
-        // sfuIds = sfuIds.filter(sfu => {
-        //     console.debug("requestPeerConnections -- comparing and filtering out SFUs with connectedPeers >= maxRelay",{
-        //       sfu:sfu,
-        //       currConnPeers:roomUsers[sfu].currConnectedPeers,
-        //       maxRelay:roomUsers[sfu].maxRelay
-        //     });
-        //     return roomUsers[sfu].currConnectedPeers.length < roomUsers[sfu].maxRelay
-        // });
 
-        console.debug("requesting peer connections with sfus", { sfuIds: sfuIds });
 
 
 
         let targetPeers = [];
 
         sfuIds.forEach(e => {
-          console.log("updating localStreams for this peer", { peerId: e, localStreams: roomUsers[e].localStreams });
           webrtcManager.updatePeerLocalStreams(e, roomUsers[e].localStreams);
           targetPeers.push(roomUsers[e]);
         });
 
         await webrtcManager.startWebRTCConnections(assignedSFUPeer, targetPeers);
-        console.debug("startwebrtcConnections ok")
         return true;
 
       } else {
-        console.debug("no peers to connect to...");
         return false;
       }
 
-      // if(!props.userData.sfu){
-      //   await webrtcManager.startWebRTCConnections(sfuPeer);
-      //   console.debug("startwebrtcConnections ok")
-      // }
-
-      // await webrtcManager.startWebRTCConnections(sfuPeer);
-      // console.debug("startwebrtcConnections ok")
-
-      return true;
-
     } catch (err) {
-      console.log("startwebrtcConnections error");
       console.error(err);
     }
 
-  }
-
-  const filterUsersToConnectTo = (users, currPeerId, owner, presenter) => {
-    delete users[currPeerId];
-    let newUserList = {};
-    if (!owner && !presenter) {
-      Object.keys(users).forEach(u => {
-
-        console.log("el peer a analizarrrr", { p: users[u] });
-
-        if (users[u].canStream && users[u].owner || users[u].presenter) {
-          newUserList[u] = users[u];
-        }
-      });
-    } else {
-      newUserList = users;
-    }
-    return newUserList;
   }
 
   const onClonedStreamsUpdated = (peerId, clonedStreams) => {
@@ -819,19 +885,14 @@ const Room = (props) => {
   }
 
   const handleBeforeUnloadEvent = e => {
-    if(e.preventDefault){
+    if(e.preventDefault && !leavingRef.current){
       e.preventDefault();
     }
     sendLeaveRequest();
-    // Chrome requires returnValue to be set.
-    //e.returnValue = '';
   }
 
   useEffect(() => {
-    //step 1
-    console.log("Punto inicial de room: Entra al useEffect");
 
-    setPeerJoined(true);
     setPeerId(props.userData.peerId);
     setIsOwner(props.userData.isOwner);
     setIsPresenter(props.userData.isPresenter);
@@ -840,21 +901,10 @@ const Room = (props) => {
 
     let userData = users[props.userData.peerId];
 
-    console.log("arrancando -- obtuvo el user data", { uData: userData });
     setIsMainPresenter(users[props.userData.peerId].mainPresenter);
     let testUsers = {}
 
-    // for(let i=0; i < 15; i++){
-    //   let u = {
-    //     id:i+1,
-    //     canStream: false,
-    //     userName: "user-"+Math.ceil(Math.random()*1000),
-    //     presenter: true ,
-    //     owner:false
-    //   }
 
-    //   testUsers["u"+(i+1)] = u;
-    // }
 
     users = {
       ...users,
@@ -873,7 +923,6 @@ const Room = (props) => {
       rtcIceCandidateFactory, props.wsSocket, {
       'iceServers': config.getIceServers()
     }, {});
-    //preferredVideoCodecs: ["video/VP9", "video/VP8", "video/H264"]
 
     wrtcManager.constraints = {
       preferredVideoCodecs: ["video/VP8"]
@@ -887,7 +936,6 @@ const Room = (props) => {
       "onRemoteStreamRemoved": onRemoteStreamRemoved,
       "onClonedStreamsUpdated": onClonedStreamsUpdated,
       "onStreamLoaded":onStreamLoaded
-      //"onMPStreamLoaded":onMPStreamLoaded
     });
 
 
@@ -914,27 +962,12 @@ const Room = (props) => {
 
     props.roomManager.requestTargetSFU(props.userData.peerId, props.userData.roomId);
 
-    // if(!props.userData.sfu){
-    //   let restOfUsers = {
-    //     ...users
-    //   }
-
-    //   restOfUsers = filterUsersToConnectTo(restOfUsers, props.userData.peerId,
-    //     props.userData.isOwner, props.userData.isPresenter);
-
-    //   let sfuPeer = null;
-
-    //   Object.keys(restOfUsers).forEach(e => {
-    //     if(restOfUsers[e].sfu){
-    //       sfuPeer = restOfUsers[e];
-    //     }
-    //   });
-
-    //   requestPeerConnections(sfuPeer, wrtcManager);
-    // }
 
 
-    console.log("Punto final inicializaciÃ³n Room");
+
+
+
+
 
 
     window.addEventListener("beforeunload",handleBeforeUnloadEvent);
@@ -944,19 +977,67 @@ const Room = (props) => {
     setScreen(scr);
 
     return () => {
-      console.log("main effect -- return function executed");
       window.removeEventListener("beforeunload",handleBeforeUnloadEvent);
     }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const readConnectionLevel = () => {
+      if (!navigator.onLine) {
+        setConnectionLevel(1);
+        return;
+      }
+
+      const peerCount = Object.keys(roomUsers || {}).length;
+      if (peerCount <= 1) {
+        setConnectionLevel(4);
+        return;
+      }
+
+      const remotePeers = webrtcManager ? Object.values(webrtcManager.remotePeers || {}) : [];
+      const states = remotePeers
+        .map(peer => peer.peerConn && (peer.peerConn.connectionState || peer.peerConn.iceConnectionState))
+        .filter(Boolean);
+
+      if (states.length === 0) {
+        setConnectionLevel(3);
+        return;
+      }
+
+      if (states.some(state => state === "connected" || state === "completed")) {
+        setConnectionLevel(4);
+      } else if (states.some(state => state === "connecting" || state === "new")) {
+        setConnectionLevel(3);
+      } else if (states.some(state => state === "disconnected")) {
+        setConnectionLevel(2);
+      } else {
+        setConnectionLevel(1);
+      }
+    };
+
+    readConnectionLevel();
+    const interval = window.setInterval(readConnectionLevel, 2000);
+    window.addEventListener("online", readConnectionLevel);
+    window.addEventListener("offline", readConnectionLevel);
+
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("online", readConnectionLevel);
+      window.removeEventListener("offline", readConnectionLevel);
+    };
+  }, [webrtcManager, roomUsers]);
 
   const leaveRoom = async e => {
 
-    console.log("leaving the room ", { userData: props.userData, roomManager: props.roomManager });
-    webrtcManager.closeAllPCs();
-    //window.removeEventListener("beforeunload",handleBeforeUnloadEvent);
-    //await props.roomManager.leave(props.userData.roomId, props.userData.peerId);
-    window.location.reload();
+    leavingRef.current = true;
+    try {
+      webrtcManager.closeAllPCs();
+    } catch (error) {
+      console.error("leaveRoom: closeAllPCs failed", error);
+    }
+    window.location.assign("/");
 
   }
 
@@ -1030,95 +1111,40 @@ const Room = (props) => {
     setSideBoxState(sideBoxState);
   }
 
-  const getPlayerSize = (userType) => {
-    let size = 98;
-
-    if (smScreen) {
-      size = 138
-    }
-
-    if (mdScreen) {
-      size = 176
-    }
-
-    if (lgScreen) {
-      size = 214
-    }
-
-    if (userType == "presenter") {
-      size = Math.ceil(size * 0.60);
-    }
-
-    if (userType == "spectator") {
-      size = Math.ceil(size * 0.40);
-    }
-
-
-
-    return size;
+  const openConnectionSheet = () => {
+    setOptionsOpen(false);
+    setInviteOpen(false);
+    toggleSideBox({ opened: false, section: "" });
+    setConnectionOpen(true);
   }
-
 
   useEffect(() => {
     let sizes = {
-      owner: getPlayerSize("owner"),
-      presenter: getPlayerSize("presenter"),
-      spectator: getPlayerSize("spectator"),
+      owner: getPlayerSize("owner", smScreen, mdScreen, lgScreen),
+      presenter: getPlayerSize("presenter", smScreen, mdScreen, lgScreen),
+      spectator: getPlayerSize("spectator", smScreen, mdScreen, lgScreen),
     }
 
     setPlayerSizes(sizes);
 
-    return () => {
-      //console.debug("effect callback de screen size");
-    }
-
   }, [smScreen, mdScreen, lgScreen]);
 
-  // const onScreenVideoEnded = () => {
-  //   console.log("aca termina screen sharing por browser UI");
-  //   toggleScreen();
-  // }
 
   const toggleScreen = async () => {
     if (screen.getStream()) {
-      console.log("ya estaba funcionando screen, lo desactiva");
       removeLocalStream(screen.getStream());
-      //screen.getStream().getVideoTracks()[0].removeEventListener("ended",onScreenVideoEnded);
       screen.stop();
     } else {
-      console.log("reactiva la camara");
       await screen.start();
-      //screen.getStream().getVideoTracks()[0].addEventListener("ended",onScreenVideoEnded);
       addLocalStream(screen.getStream(), "screen");
     }
 
   }
 
-  const findStreamByLabel = (streamsObj,label) => {
-    console.log("findStreamByLabel -- starting",{streams:streamsObj,label:label});
-    let streamIds =  Object.keys(streamsObj);
-    let streamId = streamIds.find( sId => {
-        return streamsObj[sId].label === label;
-    });
-    console.log("findStreamByLabel -- final result ",{str:streamsObj[streamId]});
-    return streamsObj[streamId];
-  } 
-
-
   const backToMainSection = (stream) => {
-      console.log("backToMainSection -- starting",{stream,selectedScreenPresenter});
       if(stream){
         
-        // let originPeerLocalStreams = roomUsers[selectedScreenPresenter.id].localStreams;
-        // console.log("backToMainSection -- originPeerLocalStreams ",{
-        //   originPeerLocalStreams:originPeerLocalStreams
-        // });
 
-        // let screenStreamId = Object.keys(originPeerLocalStreams).find( s => {
-        //   return originPeerLocalStreams[s].label === "screen"
-        // });
-        console.log("backToMainSection -- screenStreamId "+stream.id);
-        // remotePeerStreams[selectedScreenPresenter.id][streamId];
   
         let screenStream = stream;
         if(screenStream&&!props.userData.sfu){
@@ -1146,12 +1172,10 @@ const Room = (props) => {
 
   const goToScreen = peer => {
 
-    console.log("se va para la pantalla ", { peer: peer });
    
     if(!props.userData.sfu){
 
       if(selectedScreenPresenter){
-        console.log("seteando el old screen presenter ", { selectedScreenPresenter });
         setOldScreenPresenter({
           ...selectedScreenPresenter
         });
@@ -1186,11 +1210,40 @@ const Room = (props) => {
     roomManager.sendMicState(props.userData.roomId, props.userData.peerId, enabled);
   }
 
+  const toggleLocalCamera = async () => {
+    const cam = props.localCamera;
+    if (!cam) {
+      return;
+    }
+    if (!cam.getStream()) {
+      await cam.start();
+    } else if (cam.isVideoEnabled()) {
+      cam.disableVideo();
+    } else {
+      cam.enableVideo();
+    }
+    const enabled = cam.isVideoEnabled();
+    setLocalCameraOn(enabled);
+    cameraStateChanged(enabled);
+  }
+
+  const toggleLocalMic = () => {
+    const cam = props.localCamera;
+    if (!cam) {
+      return;
+    }
+    if (cam.isAudioEnabled()) {
+      cam.mute();
+    } else {
+      cam.unmute();
+    }
+    const enabled = cam.isAudioEnabled();
+    setLocalMicOn(enabled);
+    micStateChanged(enabled);
+  }
+
   const createSubRoom = (roomName, roomMax, roomType) => {
-    console.log("createSubRoom");
     roomManager.createSubRoom(props.userData.roomId, roomName, roomMax, roomType);
-    // setSubRooms(oldArray => [...oldArray, { roomName: roomName, roomMax: roomMax, roomType: roomType }]);
-    // console.log(subRooms);
   }
 
   const toogleCreateNewSubRoom = () => {
@@ -1198,38 +1251,233 @@ const Room = (props) => {
     toggleSideBox({ section: "subrooms", opened: true });
   }
 
-  // const getPeerStreamsByLabel = (roomUsers, remotePeerStreams, peerId) => {
-  //   console.log("RoomGrid -- getPeerStreamsByLabel -- comenzando", {
-  //     roomUsers: roomUsers,
-  //     rps: remotePeerStreams, peerId: peerId
-  //   });
 
-  //   let streams = {};
 
-  //   if (roomUsers && roomUsers[peerId] && remotePeerStreams[peerId]) {
-  //     let peerLocalStreamRefs = roomUsers[peerId].localStreams || {};
 
-  //     console.log("RoomGrid -- getPeerStreamsByLabel -- peer's current local streams", { peerId: peerId, peerLocalStreams: peerLocalStreamRefs });
 
-  //     Object.keys(peerLocalStreamRefs).filter(ls => {
-  //       streams[peerLocalStreamRefs[ls].label] = remotePeerStreams[peerId][ls];
-  //     });
 
-  //   } else {
-  //     console.warn("RoomGrid -- getPeerStreamsByLabel: could not find reference of this peer in roomUsers or remotePeerStreams",
-  //       {
-  //         roomUsers: roomUsers,
-  //         rps: remotePeerStreams, peerId: peerId
-  //       })
-  //   }
 
-  //   return streams;
 
-  // }
+
+  if (!mdScreen) {
+    const participantCount = Object.keys(roomUsers).length;
+    const roomUrl = window.location.href;
+
+    return (
+      <StyledEngineProvider injectFirst>
+        <ThemeProvider theme={mobileTheme}>
+          <CssBaseline />
+          <div className={classes.mobilePage}>
+            <header className={classes.mobileHeader}>
+              {/* TODO(Juan): the real room name will come from the backend. */}
+              <div className={classes.mobileHeaderLeft}>
+                <p className={classes.mobileTitle}>[PLACEHOLDER]</p>
+                <button
+                  type="button"
+                  className={classes.mobileMarkButton}
+                  onClick={openConnectionSheet}
+                  aria-label="Ver estado de conexión"
+                >
+                  <ConnectionHexes className={classes.mobileMark} level={connectionLevel} />
+                </button>
+              </div>
+              <div className={classes.mobileHeaderRight}>
+                <button
+                  type="button"
+                  className={classes.mobileCount}
+                  onClick={() => {
+                    setOptionsOpen(false);
+                    setInviteOpen(false);
+                    setConnectionOpen(false);
+                    toggleSideBox({ opened: true, section: "participants" });
+                  }}
+                  aria-label="Ver participantes"
+                >
+                  <PersonOutlined fontSize="small" />
+                  {participantCount}
+                </button>
+                <button
+                  type="button"
+                  className={classes.mobileInvite}
+                  onClick={() => {
+                    toggleSideBox({ opened: false, section: "" });
+                    setOptionsOpen(false);
+                    setInviteOpen(true);
+                  }}
+                  aria-label="Invitar a alguien"
+                >
+                  <PersonAddOutlined />
+                </button>
+              </div>
+            </header>
+
+            <main
+              className={classes.mobileMain}
+              onClick={event => {
+                if (event.target === event.currentTarget) {
+                  openConnectionSheet();
+                }
+              }}
+            >
+              {currentSection === "screen" && selectedScreenPresenter ? (
+                <ScreenView
+                  userData={props.userData}
+                  roomUsers={roomUsers}
+                  goToScreen={goToScreen}
+                  playerSizes={playerSizes}
+                  remotePeerStreams={remotePeerStreams}
+                  onLeaveScreenView={backToMainSection}
+                  presenterPlayerSize={playerSizes["presenter"] * 0.5}
+                  label={selectedScreenPresenter.userName}
+                  presenterData={selectedScreenPresenter}
+                  localCamera={props.localCamera}
+                  presenterStreams={(remotePeerStreams && remotePeerStreams[selectedScreenPresenter.id])}
+                />
+              ) : participantCount <= 1 ? (
+                <div
+                  className={classes.mobileSelf}
+                  onClick={event => {
+                    if (event.target === event.currentTarget) {
+                      openConnectionSheet();
+                    }
+                  }}
+                >
+                  <MediaPlayerWidget
+                    nomedia={!localCameraOn}
+                    isCameraEnable={localCameraOn}
+                    avatar={props.userData.avatar}
+                    background={isPresenter ? "primary" : "secondary"}
+                    volume={0}
+                    label={props.userData.userName || null}
+                    playerSize={250}
+                    stream={props.localCamera && props.localCamera.getStream()}
+                  />
+                </div>
+              ) : (
+                <RoomGrid
+                  nomedia={false}
+                  userData={props.userData}
+                  roomUsers={roomUsers}
+                  playerSizes={playerSizes}
+                  isMainPresenter={isMainPresenter}
+                  isOwner={isOwner}
+                  isPresenter={isPresenter}
+                  localCamera={props.localCamera}
+                  goToScreen={goToScreen}
+                  grantPresentation={grantPresentation}
+                  remotePeerStreams={remotePeerStreams}
+                  onPresentationRemoved={removePresentation}
+                  onBackgroundClick={openConnectionSheet}
+                />
+              )}
+            </main>
+
+            <MobileRoomBar
+              cameraOn={localCameraOn}
+              micOn={localMicOn}
+              optionsOpen={optionsOpen}
+              onToggleCamera={toggleLocalCamera}
+              onToggleMic={toggleLocalMic}
+              onOpenOptions={() => {
+                toggleSideBox({ opened: false, section: "" });
+                setOptionsOpen(open => !open);
+              }}
+              onOpenPeople={() => {
+                setOptionsOpen(false);
+                toggleSideBox({ opened: true, section: "participants" });
+              }}
+              onOpenChat={() => {
+                setOptionsOpen(false);
+                toggleSideBox({ opened: true, section: "chat" });
+              }}
+              onToggleScreen={toggleScreen}
+              onLeave={leaveRoom}
+            />
+
+            <MobileParticipantsSheet
+              open={sideBoxState.opened && sideBoxState.section === "participants"}
+              onClose={() => toggleSideBox({ opened: false, section: "" })}
+              roomUsers={roomUsers}
+              userData={props.userData}
+            />
+
+            {sideBoxState.opened && sideBoxState.section === "chat" ? (
+              <>
+                <div
+                  className={classes.mobileSideOverlay}
+                  onMouseDown={() => toggleSideBox({ opened: false, section: "" })}
+                />
+                <div className={classes.mobileSideSheet}>
+                  <div className={classes.mobileSideHead}>
+                    <p className={classes.mobileSideTitle}>Chat</p>
+                    <button
+                      type="button"
+                      className={classes.mobileClose}
+                      onClick={() => toggleSideBox({ opened: false, section: "" })}
+                      aria-label="Cerrar"
+                    >
+                      <CloseIcon />
+                    </button>
+                  </div>
+                  <SideBoxWidget
+                    defaultSection="chat"
+                    hideTabs
+                    remotePeerStreams={remotePeerStreams}
+                    sendMessage={sendMessage}
+                    userData={props.userData}
+                    removePresentation={removePresentation}
+                    grantPresentation={grantPresentation}
+                    roomUsers={roomUsers}
+                    messages={messages}
+                    createSubRoom={createSubRoom}
+                    subRooms={subRooms}
+                    toogleCreateNewSubRoom={toogleCreateNewSubRoom}
+                    toggleSideBox={toggleSideBox}
+                  />
+                </div>
+              </>
+            ) : null}
+
+            <RoomOptionsSheet
+              open={optionsOpen}
+              onClose={() => setOptionsOpen(false)}
+              onInvite={() => {
+                setOptionsOpen(false);
+                setInviteOpen(true);
+              }}
+              roomUrl={roomUrl}
+              cameraOn={localCameraOn}
+              micOn={localMicOn}
+              onToggleCamera={toggleLocalCamera}
+              onToggleMic={toggleLocalMic}
+            />
+
+            <RoomInviteSheet
+              open={inviteOpen}
+              onClose={() => setInviteOpen(false)}
+              roomUrl={roomUrl}
+            />
+
+            <ConnectionStatusSheet
+              open={connectionOpen}
+              onClose={() => setConnectionOpen(false)}
+              userName={
+                props.userData.userName ||
+                (roomUsers[props.userData.peerId] && roomUsers[props.userData.peerId].userName) ||
+                "Invitado"
+              }
+              isOwner={isOwner}
+              capabilities={roomUsers[props.userData.peerId] && roomUsers[props.userData.peerId].capabilities}
+            />
+          </div>
+        </ThemeProvider>
+      </StyledEngineProvider>
+    );
+  }
 
   return (
     <StyledEngineProvider injectFirst>
-      (<ThemeProvider theme={theme} >
+      <ThemeProvider theme={theme} >
         <CssBaseline />
         <div className={classes.mainBox}>
           <div className={classes.videoCallBox}>
@@ -1250,7 +1498,7 @@ const Room = (props) => {
                           isCameraEnable={props.localCamera ? props.localCamera.isVideoEnabled():false}
                           avatar={props.userData.avatar}
                           background={isPresenter ? "primary" : "secondary"}
-                          volume={0} label={props.userData && props.userData.userName || props.userData.peerId}
+                          volume={0} label={(props.userData && props.userData.userName) || props.userData.peerId}
                           playerSize={125} stream={props.localCamera && props.localCamera.getStream()} />
 
                       </div>
@@ -1313,7 +1561,7 @@ const Room = (props) => {
                   />
                 )
                 :
-                (<div />)
+                <div />
             }
 
           </div>
@@ -1360,7 +1608,7 @@ const Room = (props) => {
 
         </div>
 
-      </ThemeProvider>)
+      </ThemeProvider>
     </StyledEngineProvider>
   );
 };

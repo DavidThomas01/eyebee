@@ -1,17 +1,13 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useLocation } from "react-router-dom";
 
 import MobileDeviceDetector from "./MobileDeviceDetector";
 
-//import {} from "@mui/material";
-
 import queryString from "query-string";
-
 
 import socketIOClient from "socket.io-client";
 import SocketIOProvider from "./SocketIOProvider";
 import RoomManager from "./Room/RoomManager";
-// import WebRTCManager from "./WebRTCManager";
 
 import JoinRoomView from "./JoinRoomView";
 import Room from "./Room/Room";
@@ -68,17 +64,14 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-const VideoConference = props => {
+const VideoConference = () => {
 
     const classes = useStyles();
     const { roomId } = useParams(); // Gets roomId from URL
     const location = useLocation();
-    const sections = ["joinRoom", "room"];
     const [currentSection, setCurrentSection] = useState("joinRoom");
 
     const [userData, setUserData] = useState({});
-
-    const [queryParams, setQueryParams] = useState({});
 
     const [camera, setCamera] = useState(null);
 
@@ -94,13 +87,48 @@ const VideoConference = props => {
 
     const [showPeerTestStats, setShowPeerTestStats] = useState(false);
 
-    const onUserJoined = useCallback(() => {
+    const [joining, setJoining] = useState(false);
 
-        setCurrentSection("room");
-    }, [camera]);
+    const [joinParticipantCount, setJoinParticipantCount] = useState(null);
+
+    const joinStartedAt = useRef(0);
+    const joinRevealTimer = useRef(null);
+
+    const onUserJoined = useCallback((users) => {
+        setJoinParticipantCount(users ? Object.keys(users).length : null);
+
+        if (!joinStartedAt.current) {
+            setCurrentSection("room");
+            return;
+        }
+
+        const elapsed = Date.now() - joinStartedAt.current;
+        const remaining = Math.max(0, 700 - elapsed);
+
+        window.clearTimeout(joinRevealTimer.current);
+        joinRevealTimer.current = window.setTimeout(() => {
+            joinStartedAt.current = 0;
+            setCurrentSection("room");
+            setJoining(false);
+        }, remaining);
+    }, []);
+
+    useEffect(() => () => window.clearTimeout(joinRevealTimer.current), []);
+
+    const startJoin = () => {
+        joinStartedAt.current = Date.now();
+        setJoinParticipantCount(null);
+        setJoining(true);
+    };
+
+    const cancelJoin = () => {
+        window.clearTimeout(joinRevealTimer.current);
+        joinStartedAt.current = 0;
+        setJoining(false);
+    };
 
     const onError = data => {
-        console.log("hubo un error al unirse a la sala", { data: data });
+        console.error("Could not join the room", { data });
     }
 
     useEffect(() => {
@@ -111,22 +139,28 @@ const VideoConference = props => {
             let p = jsonQS2.p.replace(/ /g, "+");
             const params = crypto.AES.decrypt(p, "human hive eyebee").toString(crypto.enc.Utf8);
             jsonQS = queryString.parse(params);
-            console.log(jsonQS);
-        //}else if(window.location.origin.indexOf("localhost") !== -1){
+            if (jsonQS2.create !== undefined) {
+                jsonQS.create = jsonQS2.create;
+            }
         }else {
             jsonQS =jsonQS2;
         }
-        
-        setQueryParams(jsonQS);
+
         setTestDisabled(jsonQS && jsonQS.testDisabled === "true");
+
+        if (jsonQS2.create !== undefined) {
+            const cleanUrl = new URL(window.location.href);
+            cleanUrl.searchParams.delete("create");
+            window.history.replaceState(window.history.state, "", cleanUrl.toString());
+        }
 
         userData.roomId = roomId;
 
-        //setPeerId(jsonQS.peer_id);
         userData.smallRoom = jsonQS.largeRoom === "false" || !jsonQS.largeRoom;
         userData.isOwner = jsonQS.owner === "true";
         userData.isPresenter = jsonQS.presenter === "true";
         userData.sfu = jsonQS.sfu === "true";
+        userData.create = jsonQS.create === "1" || jsonQS.create === "true";
         userData.name = jsonQS.peer_id;
         userData.testStream = jsonQS.test_stream;
         if(jsonQS.testDisabled === "true"){
@@ -171,8 +205,6 @@ const VideoConference = props => {
                 generatedPeerId = "espectador-" + Math.trunc(Math.random() * 1000);
             }
 
-            //jsonQS.peer_id = generatedPeerId;
-            //window.location.search = props.location.search + "&peer_id="+generatedPeerId;
             userData.peerId = generatedPeerId;
 
         } else {
@@ -196,25 +228,6 @@ const VideoConference = props => {
             }
         });
 
-        socket.on("disconnect", () => {
-            console.debug("el socket se acaba de desconectar");
-        });
-        socket.on("connect", () => {
-            console.debug("el socket se acaba de conectar");
-        });
-        socket.on("reconnect", () => {
-            console.debug("el socket se acaba de reconectar");
-        });
-
-
-        socket.on("reconnect_attempt", atNum => {
-            console.debug("el socket esta intentando reconectar " + atNum);
-        });
-
-        socket.on("ping", () => {
-            console.debug("ping recibido del server");
-        });
-
         setWSSocket(socket);
 
         let roomManager = new RoomManager(socket,
@@ -225,11 +238,7 @@ const VideoConference = props => {
 
         setRoomManager(roomManager);
 
-
-        return () => {
-            
-        }
-
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
 
@@ -241,11 +250,7 @@ const VideoConference = props => {
             });
         }
 
-        return () => {
-           
-        }
-
-    }, [roomManager]);
+    }, [roomManager, onUserJoined]);
 
     const joinRoom = (userName, cameraStreams, testResults, avatar) => {
 
@@ -253,7 +258,6 @@ const VideoConference = props => {
             let udata = {
                 ...userData
             }
-            console.debug(avatar);
             udata.userName = userName;
             udata.camera = cameraStreams.camera;
             udata.mic = cameraStreams.mic;
@@ -266,10 +270,17 @@ const VideoConference = props => {
                         value: testResults[e].value
                     }
                 });
+            } else {
+                const scores = udata.forcedScores || { cpu: 1, upload: 100, download: 500 };
+                udata.capabilities = {
+                    CPU: { name: "CPU", value: scores.cpu },
+                    connectionType: { name: "Connection", value: "STUN" },
+                    upload: { name: "Upload", value: scores.upload },
+                    download: { name: "Download", value: scores.download }
+                };
             }
     
             setUserData(udata);
-            console.debug("joinRoom f:" + udata);
             roomManager.join(udata.roomId, udata.peerId, {
                 capabilities: udata.capabilities,
                 owner: udata.isOwner,
@@ -283,7 +294,6 @@ const VideoConference = props => {
                 avatar: avatar,
                 maxRelay: udata.maxRelay
             },response => {
-                console.log("el callback response de join ",{response});
                 if(response.result === "error"){
                     reject(response);
                 }else{
@@ -302,13 +312,12 @@ const VideoConference = props => {
     }
 
     const canvasCreated = canvasEl => {
-        console.debug("canvasCreated()",{canvasEl:canvasEl});
         setCanvasEl(canvasEl);
     }
 
     return (
         <StyledEngineProvider injectFirst>
-            (<ThemeProvider theme={theme}>
+            <ThemeProvider theme={theme}>
 
                 <div className={classes.mainBox}>
                     <p style={{
@@ -318,11 +327,11 @@ const VideoConference = props => {
 
                     {currentSection === "joinRoom" ?
                         (
-                            <JoinRoomView showPeerTestStats={showPeerTestStats} testCanvasEl={canvasEl} testDisabled={testDisabled} roomManager={roomManager} userData={userData} joinRoom={joinRoom} onCamera={setupCamera} />
+                            <JoinRoomView showPeerTestStats={showPeerTestStats} testCanvasEl={canvasEl} testDisabled={testDisabled} roomManager={roomManager} userData={userData} joinRoom={joinRoom} onCamera={setupCamera} joining={joining} onJoinStart={startJoin} onJoinCancel={cancelJoin} joinParticipantCount={joinParticipantCount} />
 
                         )
                         :
-                        (<div />)
+                        <div />
 
                     }
 
@@ -332,14 +341,14 @@ const VideoConference = props => {
                                 wsSocket={wsSocket} localCamera={camera} />
                         )
                         :
-                        (<div />)
+                        <div />
 
                     }
 
 
                 </div>
 
-            </ThemeProvider>)
+            </ThemeProvider>
         </StyledEngineProvider>
     );
 

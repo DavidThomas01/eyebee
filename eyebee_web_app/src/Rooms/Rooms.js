@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { createTheme, ThemeProvider, StyledEngineProvider, adaptV4Theme } from '@mui/material/styles';
 import makeStyles from '@mui/styles/makeStyles';
 import withStyles from '@mui/styles/withStyles';
 import logoEyeBee from "../img/logo_eyebee_fondo_negrov2.jpg";
-import ImageIcon from '@mui/icons-material/Image';
-import { Input, Button, CssBaseline, InputAdornment, Box, InputLabel, IconButton, TextField, useMediaQuery, Select, MenuItem } from "@mui/material";
+import { Button } from "@mui/material";
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useLocation, useNavigate } from "react-router-dom";
 import Table from '@mui/material/Table';
@@ -109,48 +108,6 @@ const useStyles = makeStyles(theme => ({
     title: {
         color: "white"
     },
-    mediaBox: {
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "flex-start",
-        justifyContent: "center"
-    },
-    mediaSelectionBox: {
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexDirection: "column",
-        margin: "1em 0"
-    },
-    [theme.breakpoints.up("md")]: {
-        mediaSelectionBox: {
-            margin: "2em 0"
-        },
-        deviceField: {
-            maxWidth: "25em"
-        },
-        userNameField: {
-            maxWidth: "25em"
-        }
-    },
-    [theme.breakpoints.down('md')]: {
-        mediaSelectionBox: {
-            margin: "1em 0"
-        },
-        deviceField: {
-            maxWidth: "17em"
-        },
-        userNameField: {
-            maxWidth: "17em"
-        }
-    },
-    actionsBox: {
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        width: "100%",
-        margin: "1em 0"
-    },
     roundedBtn: {
         textTransform: "none",
         borderRadius: "0.5em"
@@ -160,86 +117,13 @@ const useStyles = makeStyles(theme => ({
         minWidth: "3em",
         fontSize: "0.8em"
     },
-    statusBox: {
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "flex-start",
-        width: "100%",
-        color: "#424242"
-    },
-    statusText: {
-        margin: "0.5em 1em"
-    },
-    sideBox: {
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "flex-start",
-        width: "100%",
-        backgroundColor: "#292929",
-        color: "#f5f5f5"
-    },
-    roomPlayersBox: {
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "flex-start",
-        backgroundColor: "#000"
-    },
-    actionBtn: {
-        padding: "1em 0",
-        backgroundColor: theme.palette.lightbg
-    },
-    userNameField: {
-        width: "100%"
-    },
-    deviceField: {
-        margin: "1em 0",
-        width: "100%"
-    },
-    messageBox: {
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "1em",
-        textAlign: "justify"
-    },
-    message: {
-        color: theme.palette.primary.main,
-        fontWeight: "bold"
-    }
-    ,
-    hide: {
-        visibility: "hidden"
-    },
     link: {
+        padding: 0,
+        border: 0,
+        background: "none",
         color: "white",
+        font: "inherit",
         cursor: "pointer"
-    }
-}));
-
-const darkFormField = createTheme(adaptV4Theme({
-    palette: {
-        background: {
-            default: "#212121",
-            paper: "#212121"
-        },
-        primary: {
-            main: "#fafafa",
-
-        },
-        secondary: {
-            main: "#fafafa",
-            contrastText: "#fafafa"
-        },
-        text: {
-            primary: "#fafafa",
-            secondary: "#bdbdbd"
-        },
-        action: {
-            disabled: "#ffe082",
-            disabledBackground: "#ffe082"
-        }
     }
 }));
 
@@ -266,7 +150,7 @@ const lightButton = createTheme(adaptV4Theme({
 }));
 
 
-const Rooms = props => {
+const Rooms = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const classes = useStyles();
@@ -274,24 +158,19 @@ const Rooms = props => {
     const [showLinks, setShowLinks] = useState(false);
     const [rooms, setRooms] = useState([]);
     const [activeRoom, setActiveRoom] = useState();
-    const [activeRoomSmall, setActiveRoomSmall] = useState(false);
 
     useEffect(() => {
 
         const auth = localStorage.getItem("auth");
-        if (auth == false || auth == null)
+        if (auth === false || auth === null)
             navigate('/admin/login');
         loadRooms();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const logout = () => {
-        //Todo Login
         localStorage.setItem("auth", false);
         navigate('/admin/login');
-    }
-
-    function createData(name, calories, fat, carbs, protein) {
-        return { name, calories, fat, carbs, protein };
     }
 
     const toogleCreateNewSubRoom = () => {
@@ -316,7 +195,6 @@ const Rooms = props => {
 
     const loadRooms = () => {
         axios.get("/api/v1/rooms/"+( location.state ? "filter/" + location.state.user.user_id:"")).then(result => {
-            console.log(result);
             if (result.status === 200) {
                 let roomsFromServer = result.data.data.map(r => {
                     let d = new Date(r.date);
@@ -327,7 +205,6 @@ const Rooms = props => {
                     return roomFromServer;
                 });
 
-                console.log(roomsFromServer);
                 setRooms(roomsFromServer);
             }
         }).catch(error => alert("Server error"));
@@ -341,9 +218,7 @@ const Rooms = props => {
 
         const payload = { active: true, date: new Date(), name: roomName, type: "Webinar", usuarios: roomMax, room_uuid: "params", user_id: location.state.user.user_id }
         axios.post("/api/v1/rooms/", payload).then(result => {
-            console.log(result);
             if (result.status === 201) {
-                console.log("room created");
                 setRooms([...rooms, { room_id: result.data.data.room_id, name: roomName, users: roomMax, type: "Webinar", date: `${day}-${month}-${year}` }]);
             }
         }).catch(error => alert("Server error"));
@@ -351,7 +226,7 @@ const Rooms = props => {
 
     return (
         <StyledEngineProvider injectFirst>
-            (<ThemeProvider theme={theme}>
+            <ThemeProvider theme={theme}>
 
                 <div className={classes.mainBox}>
                     {createRoom && <NewRoom toogleCreateNewSubRoom={toogleCreateNewSubRoom} createSubRoom={createNewRoom}></NewRoom>}
@@ -362,11 +237,11 @@ const Rooms = props => {
                             <img style={{
                                 height: 8 + "em",
                                 width: "auto"
-                            }} src={logoEyeBee} />
+                            }} src={logoEyeBee} alt="Eyebee" />
                         </div>
                         <div className={classes.iconBox}>
                             <Avatar alt={location && location.state ? location.state.user.name : ""} src="/static/img/default-avatar.png" className={classes.large} />
-                            <a className={classes.link} onClick={logout}>Logout</a>
+                            <button type="button" className={classes.link} onClick={logout}>Logout</button>
                         </div>
                     </div>
                     <div className={classes.header}>
@@ -420,7 +295,7 @@ const Rooms = props => {
                         </TableContainer>
                     </div>
                 </div>
-            </ThemeProvider>)
+            </ThemeProvider>
         </StyledEngineProvider>
     );
 }

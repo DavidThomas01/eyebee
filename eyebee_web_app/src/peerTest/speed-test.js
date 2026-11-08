@@ -56,9 +56,6 @@ class SpeedTest {
 
 
             req.onabort = ev => {
-                console.debug("downloadChunk -- request aborted..resolving anyway",{
-                    url, start, end,req, cfg
-                });
                 resolve(ev);
             }
         });
@@ -98,9 +95,6 @@ class SpeedTest {
             };
 
             req.onabort = ev => {
-                console.debug("uploadChunk -- request aborted...resolving anyway",{
-                    url, start, end,req, cfg
-                });
                 resolve(ev);
             }
         });
@@ -156,8 +150,6 @@ class SpeedTest {
         // run now
         const beginTimeDL = performance.now();
 
-        console.group('Test Download...');
-        console.info('Begin to negotiate download size...');
 
         let results = {
             "download":{
@@ -207,7 +199,6 @@ class SpeedTest {
         let negDLTimeout = null;
         if(maxTimeMillis > 0){
             negDLTimeout = setTimeout(() => {
-                console.debug("max time reached..aborting download test",{maxTime:maxTimeMillis});
                 negDLReq.abort();
             },maxTimeMillis);
         }
@@ -215,7 +206,6 @@ class SpeedTest {
         try{
             await this.downloadChunk(this.config.testFile + '?' + Date.now(), 1, this.config.negotiationSize,negDLReq);
         }catch(err){
-            console.debug("runTest -- error when negotiating download chunk size",{err:err});
         }finally{
             clearTimeout(negDLTimeout);
         }
@@ -223,8 +213,6 @@ class SpeedTest {
         const durationDL = performance.now() - beginTimeDL;
         const newEndIndexDL = Math.round(this.config.negotiationSize / durationDL * this.config.targetTime) + this.config.negotiationSize;
 
-        console.debug('Took ', Math.round(durationDL * 100) / 100, 'ms for downloading ', Math.round(this.config.negotiationSize / 1024 / 1024 * 100) / 100, 'MB of test data');
-        console.debug('Use ', Math.round(newEndIndexDL / 1024 / 1024 * 100) / 100, 'MB for testing ', Math.round(this.config.targetTime / 100) / 10, ' seconds');
         
         detailsDL.start = performance.now();
         detailsDL.message = "Test download...";
@@ -233,7 +221,6 @@ class SpeedTest {
         let dlTimeout = null;
         if(maxTimeMillis > 0){
             dlTimeout = setTimeout(() => {
-                console.debug("max time reached..aborting download test",{maxTime:maxTimeMillis});
                 dlReq.abort();
             },maxTimeMillis);
         }
@@ -248,7 +235,6 @@ class SpeedTest {
                 });
             });
         }catch(err){
-            console.debug("runTest -- error when running download test",{err});
             clearTimeout(dlTimeout);
             
         }finally{
@@ -260,8 +246,6 @@ class SpeedTest {
         detailsDL.message = "Done!";
         detailsDL.done = true;
     
-        console.debug(detailsDL);
-        console.groupEnd();
 
         results["download"] = {
             name:"Download",
@@ -272,14 +256,11 @@ class SpeedTest {
 
         const uploadBegin = performance.now();
 
-        console.group('Test Upload...');
-        console.info('Begin to negotiate upload size...');
 
         let negULReq = new XMLHttpRequest();
         let negULTimeout = null;
         if(maxTimeMillis > 0){
             negULTimeout = setTimeout(() => {
-                console.debug("max time reached..aborting uploading test",{maxTime:maxTimeMillis});
                 negULReq.abort();
             },maxTimeMillis);
         }
@@ -290,7 +271,6 @@ class SpeedTest {
             try{
                 await this.uploadChunk(this.config.uploadEndpoint + '?' + Date.now(), blob, 1, this.config.negotiationSize,negULReq);
             }catch(err){
-                console.debug("runTest -- error when negotiating upload size",{err});
                 clearTimeout(negULTimeout);
                
             }finally{
@@ -319,7 +299,6 @@ class SpeedTest {
             let ulTimeout = null;
             if(maxTimeMillis > 0){
                 ulTimeout = setTimeout(() => {
-                    console.debug("max time reached..aborting upload test",{maxTime:maxTimeMillis});
                     ulReq.abort();
                 },maxTimeMillis);
             }
@@ -333,7 +312,6 @@ class SpeedTest {
                     });
                 });
             }catch(err){
-                console.debug("runTest -- error trying to uploadChunk",{err:err});
                 clearTimeout(ulTimeout);
                
             }finally{
@@ -344,9 +322,6 @@ class SpeedTest {
                 detailsUL.message = "Done!";
                 detailsUL.done = true;
     
-                console.debug('Upload: ', Math.round(detailsUL.averageMbit * 100) / 100, ' MBit/sec');
-                console.debug(detailsUL);
-                console.groupEnd();
     
                 results["upload"] = {
                     name:"Upload",

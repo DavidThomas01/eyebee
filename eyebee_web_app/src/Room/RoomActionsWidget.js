@@ -4,9 +4,7 @@ import { Button, useMediaQuery, SvgIcon, Badge, Tooltip } from "@mui/material";
 import { Mic, MicOff, Videocam, VideocamOff, Chat, CallEnd, PanTool, PeopleAlt } from "@mui/icons-material";
 import { ThemeProvider, StyledEngineProvider, useTheme } from '@mui/material/styles';
 import makeStyles from '@mui/styles/makeStyles';
-import ShareScreenIcon from "../img/share-screen.png";
 
-import { ReactComponent as SubRoomSVG } from '../img/subroom-icon.svg';
 import { ReactComponent as ScreenShareSVG } from '../img/screen-share.svg';
 import { ReactComponent as ScreenShareOnSVG } from '../img/screen-share-on.svg';
 
@@ -39,15 +37,11 @@ const useStyles = makeStyles(theme => ({
             fontSize: "0.7em"
         }
     },
-    roundedBtn: {
-        borderRadius: "0.2em"
-    },
     leaveBtn: {
         minWidth: "52px",
         borderRadius: "0.2em",
         padding: "1em 0",
         margin: "0.5em",
-        // padding: theme.breakpoints.between('md', 'lg') ? "0.8em 0" : "0.5em 0"  ,
         textTransform: "none",
         backgroundColor: "#D73939",
         [theme.breakpoints.down('md')]: {
@@ -55,50 +49,22 @@ const useStyles = makeStyles(theme => ({
         },
         [theme.breakpoints.up('md')]: {
             fontSize: "1em",
-            // marginLeft:"1em"
         }
 
     },
 
-    actionBoxLeftGap: {
-        flex: "2",
-        [theme.breakpoints.down('md')]: {
-            display: "none"
-        }
-    },
     upperBtnBox: {
         flex: "2",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
 
-    },
-    lowerBtnBox: {
-        [theme.breakpoints.up('sm')]: {
-            display: "none"
-        },
-
-        [theme.breakpoints.down('sm')]: {
-            display: "flex",
-            justifyContent: "center"
-        }
-
     }
 }));
 
-const ScreenShareIcon = props => {
-    const classes = useStyles();
-    return (
-        <SvgIcon {...props} component={props.color === "primary" ? ScreenShareOnSVG : ScreenShareSVG} viewBox="0 0 32 23" />
-    )
-}
-
-const SubRoomIcon = props => {
-    const classes = useStyles();
-    return (
-        <SvgIcon {...props} component={SubRoomSVG} viewBox="0 0 34 27" />
-    )
-}
+const ScreenShareIcon = props => (
+    <SvgIcon {...props} component={props.color === "primary" ? ScreenShareOnSVG : ScreenShareSVG} viewBox="0 0 32 23" />
+)
 
 const RoomActionsWidget = props => {
 
@@ -106,8 +72,6 @@ const RoomActionsWidget = props => {
     const classes = useStyles();
     const theme = useTheme();
     const [camera, setCamera] = useState(null);
-    const [screen, setScreen] = useState(null);
-    //const [sideBoxOpened,setSideBoxOpened] = useState(false);
     const [sideBoxState, setSideBoxState] = useState({
         opened: false,
         section: ""
@@ -122,7 +86,6 @@ const RoomActionsWidget = props => {
     const [handRaised, setHandRaised] = useState(false);
     const [showScreen, setShowScreen] = useState(props.presenter);
 
-    const xsScreen = useMediaQuery(theme.breakpoints.down('sm'));
     const smScreen = useMediaQuery(theme.breakpoints.up("sm"));
 
     useEffect(() => {
@@ -148,34 +111,21 @@ const RoomActionsWidget = props => {
 
         }
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.screen]);
-
-    useEffect(() => {
-       
-    }, [xsScreen, smScreen]);
 
     const toggleCamera = async () => {
         if (!camera.getStream()) {
-            // streamsStatus["camera"] = true;
 
-            // setStreamsStatus({
-            //     ...streamsStatus
-            // });
             await camera.start();
 
-            //setMicDisabled(false);
-            //videoEl.current.volume = 0;
 
-            //videoEl.current.srcObject =  camera.getStream();
 
-            //props.onLocalStreamAdded(camera.getStream());
         } else {
 
             if (camera.isVideoEnabled()) {
-                //streamsStatus["camera"] = false;
                 camera.disableVideo();
             } else {
-                //streamsStatus["camera"] = true;
                 camera.enableVideo();
             }
 
@@ -256,10 +206,12 @@ const RoomActionsWidget = props => {
         setShowHand(!props.owner && !props.presenter);
         setShowMic(props.presenter);
         setShowScreen(props.presenter);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.presenter, props.owner]);
 
     useEffect(() => {
         props.toggleSideBox(sideBoxState);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [sideBoxState])
 
     useEffect(() => {
@@ -277,7 +229,7 @@ const RoomActionsWidget = props => {
 
     return (
         <StyledEngineProvider injectFirst>
-            (<ThemeProvider theme={theme} >
+            <ThemeProvider theme={theme} >
                 <div className={classes.mainBox}>
                     <div className={classes.roomActionsBox}>
                         <div className={classes.upperBtnBox}>
@@ -322,12 +274,10 @@ const RoomActionsWidget = props => {
                                                     streamsStatus.screen ?
                                                         (
                                                             <ScreenShareIcon style={{ ...theme.defaultIcon }} color="primary" />
-                                                            // <StopScreenShare style={theme.defaultIcon} />
                                                         )
                                                         :
                                                         (
                                                             <ScreenShareIcon style={{ ...theme.defaultIcon }} color="secondary" />
-                                                            // <ScreenShare style={theme.defaultIcon} />
                                                         )
                                                 }
 
@@ -418,7 +368,6 @@ const RoomActionsWidget = props => {
                                         style={{
                                             ...theme.actionBtn,
                                             color: "white",
-                                            //backgroundColor: sideBoxOpened ?  "#4FC16F" : theme.actionBtn.backgroundColor
                                         }}
 
                                         onClick={() => toggleSideBox("participants")}>
@@ -435,7 +384,6 @@ const RoomActionsWidget = props => {
                                         style={{
                                             ...theme.actionBtn,
                                             color: "white",
-                                            //backgroundColor: sideBoxOpened ?  "#4FC16F" : theme.actionBtn.backgroundColor
                                         }}
 
                                         onClick={e => toggleSideBox("chat")}>
@@ -464,7 +412,6 @@ const RoomActionsWidget = props => {
                                             style={{
                                                 ...theme.actionBtn,
                                                 color: "white",
-                                                //backgroundColor: sideBoxOpened ?  "#4FC16F" : theme.actionBtn.backgroundColor
                                             }}
 
                                             onClick={e => toggleSideBox("participants")}>
@@ -479,7 +426,6 @@ const RoomActionsWidget = props => {
                                             style={{
                                                 ...theme.actionBtn,
                                                 color: "white",
-                                                //backgroundColor: sideBoxOpened ?  "#4FC16F" : theme.actionBtn.backgroundColor
                                             }}
 
                                             onClick={e => toggleSideBox("chat")}>
@@ -489,21 +435,6 @@ const RoomActionsWidget = props => {
                                         </Button>
                                     </Tooltip>
 
-                                    {/* {
-                                    !smScreen ?
-                                        (
-                                            <Tooltip title="Exit">
-                                                <Button variant="contained" color="primary" className={`${classes.leaveBtn} ${classes.actionBtn}`} onClick={props.onLeave}>
-                                                    <CallEnd style={theme.defaultIcon} />
-                                                </Button>
-                                            </Tooltip>
-                                        )
-                                        :
-                                        (
-                                            <div />
-                                        )
-                                } */}
-
                                 </div>
                             }
 
@@ -511,7 +442,7 @@ const RoomActionsWidget = props => {
 
                     </div>
                 </div >
-            </ThemeProvider >)
+            </ThemeProvider>
         </StyledEngineProvider>
     );
 

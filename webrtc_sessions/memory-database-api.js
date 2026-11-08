@@ -158,7 +158,6 @@ class MemoryDatabaseAPI {
                             }
                         });
     
-                        //console.log("query como queda finalDocs",{finalDocs:finalDocs});
                     }
 
                    

@@ -1,8 +1,4 @@
 class RTCIceCandidateFactory {
-    constructor(){
-
-    }
-
     create(candidate){
         return new RTCIceCandidate(candidate);
     }

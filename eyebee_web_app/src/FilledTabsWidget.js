@@ -1,16 +1,13 @@
 import React,{useEffect, useState} from "react";
 
-import { ThemeProvider, StyledEngineProvider, useTheme, createTheme } from '@mui/material/styles';
-import makeStyles from '@mui/styles/makeStyles';
+import { ThemeProvider, StyledEngineProvider, useTheme } from '@mui/material/styles';
 import withStyles from '@mui/styles/withStyles';
 import {CssBaseline,Tabs,Tab,useMediaQuery} from "@mui/material";
 
 const FilledTabs = withStyles({
     indicator: {
-      display: 'flex',
-      justifyContent: 'center',
-      display:"none",
-      padding:"0.5em"
+      display: "none",
+      padding: "0.5em"
     },
   })((props) => <Tabs {...props}  />);
 
@@ -43,7 +40,6 @@ const FilledTabsWidget = (props) => {
 
 
     const handleChange = (e,value) => {
-        console.log("tab seleted",{e:e});
         setValue(value);
         if(props.onTabChanged){
           props.onTabChanged(value);
@@ -57,7 +53,7 @@ const FilledTabsWidget = (props) => {
 
     return (
         <StyledEngineProvider injectFirst>
-            (<ThemeProvider theme={theme} >
+            <ThemeProvider theme={theme} >
                 <CssBaseline/>
                 <div style={{
                     display:"flex",
@@ -82,7 +78,7 @@ const FilledTabsWidget = (props) => {
                     </FilledTabs>
                     
                 </div>
-            </ThemeProvider>)
+            </ThemeProvider>
         </StyledEngineProvider>
     );
 };

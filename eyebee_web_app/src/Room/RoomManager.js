@@ -9,7 +9,6 @@ class RoomManager {
     }
 
     addRoomEventCallbacks(cbs) {
-        //console.debug("va a setear los callbacks", { cbs: cbs });
         Object.keys(cbs).forEach(c => {
             this.roomEventCallbacks[c] = cbs[c];
         });
@@ -35,8 +34,6 @@ class RoomManager {
 
     init() {
         this.socket.on("users", data => {
-            console.log("los users actuales");
-            console.log(data);
             this.users = data || {};
 
             if (this.roomEventCallbacks["onUsers"]) {
@@ -45,7 +42,6 @@ class RoomManager {
         });
 
         this.socket.on("user_joined", data => {
-            console.log("(roomManager) user joined", { user: data });
 
             this.users[data.id] = data;
 
@@ -59,7 +55,6 @@ class RoomManager {
         });
 
         this.socket.on("user_presentation_request", data => {
-            console.log("(roomManager) user_presentation_request! ", { data: data, users: this.users });
 
 
             this.users[data.userId].presentationRequested = true;
@@ -71,7 +66,6 @@ class RoomManager {
         });
 
         this.socket.on("user_presentation_cancelled", data => {
-            console.log("(roomManager) user_presentation_cancelled! ", { data: data });
 
             if (this.users[data.userId]) {
                 this.users[data.userId].presentationRequested = false;
@@ -92,7 +86,6 @@ class RoomManager {
         });
 
         this.socket.on("user_presentation_granted", data => {
-            console.log("(roomManager) user_presentation_granted! ", { data: data });
 
             if (this.users[data.userId]) {
                 this.users[data.userId].presentationRequested = false;
@@ -109,7 +102,6 @@ class RoomManager {
         });
 
         this.socket.on("user_presentation_removed", data => {
-            console.log("(roomManager) al presentador se le revocó la presentacion", { data: data });
 
             if (this.users[data.target]) {
                 this.users[data.target].presenter = false;
@@ -132,7 +124,6 @@ class RoomManager {
         });
 
         this.socket.on("new_presenter", data => {
-            console.log("(roomManager) presentador se unió", { data: data });
 
             this.users[data.id] = data;
 
@@ -143,7 +134,6 @@ class RoomManager {
         });
 
         this.socket.on("user_left", data => {
-            console.debug("on_user_left -- user left the room",{data:data});
 
             delete this.users[data.userId];
 
@@ -151,7 +141,6 @@ class RoomManager {
                 delete this.users[this.localUser.userId].assignedSFU;
             }
 
-            console.log("on_user_left -- new users list",{users:this.users});
 
             if (this.roomEventCallbacks["onUserLeft"]) {
                 this.roomEventCallbacks["onUserLeft"](data);
@@ -166,15 +155,11 @@ class RoomManager {
         });
 
         this.socket.on("new_main_presenter", data => {
-            console.log("la sala tiene nuevo presentador principal");
-            console.log(data);
 
             if (this.users[data.mainPresenterId]) {
 
                 this.users[data.mainPresenterId].mainPresenter = true;
 
-                console.log("como queda la lista de usuarios en new_main_presenter", { users: this.users });
-                console.log(this.users);
 
                 if (this.roomEventCallbacks["onNewMainPresenter"]) {
                     this.roomEventCallbacks["onNewMainPresenter"](data.mainPresenterId, this.users);
@@ -198,7 +183,7 @@ class RoomManager {
 
         this.socket.on("create_sub_room", data => {
 
-            if (data.roomType == "public")//show only public rooms
+            if (data.roomType === "public")//show only public rooms
                 this.publicSubRooms.push(data);
 
             if (this.roomEventCallbacks["onNewSubRoom"]) {
@@ -208,22 +193,18 @@ class RoomManager {
         });
 
         this.socket.on("room_info", data => {
-            console.log("recibiendo en room manager el room info", { data: data });
             if (this.roomEventCallbacks["onRoomInfo"]) {
-                console.log("esta definido el callback...llamando", { data: data });
                 this.roomEventCallbacks["onRoomInfo"](data);
             }
 
         });
 
         this.socket.on("peer_camera_state_changed", data => {
-            console.log("peer changed camera state", { data: data, users: this.users });
 
             if (this.users[data.peerId]) {
 
                 this.users[data.peerId].camera = data.enabled;
 
-                console.log("como queda la lista de usuarios en peer_camera_state_changed", { users: this.users });
 
                 if (this.roomEventCallbacks["onUsers"]) {
                     this.roomEventCallbacks["onUsers"](this.users);
@@ -234,13 +215,11 @@ class RoomManager {
         });
 
         this.socket.on("peer_mic_state_changed", data => {
-            console.log("peer changed mic state", { data: data, users: this.users });
 
             if (this.users[data.peerId]) {
 
                 this.users[data.peerId].mic = data.enabled;
 
-                console.log("como queda la lista de usuarios en peer_mic_state_changed", { users: this.users });
 
                 if (this.roomEventCallbacks["onUsers"]) {
                     this.roomEventCallbacks["onUsers"](this.users);
@@ -251,26 +230,22 @@ class RoomManager {
         });
 
         this.socket.on("sfu_assigned", data => {
-            console.log("sfu_assigned", { data: data, users: this.users });
 
             if (this.users[data.userId]) {
 
                 this.users[data.userId].assignedSFU = data.assignedSFU;
 
-                console.log("como queda la lista de usuarios en sfu_assigned", { users: this.users });
 
                 if (this.roomEventCallbacks["onSFUAssigned"]) {
                     this.roomEventCallbacks["onSFUAssigned"](this.users[data.userId],this.users);
                 }
 
             }else{
-                console.warn("sfu_assigned -- userId not found in users list ",{roomId:data.roomId,userId:data.userId,users:this.users});
             }
 
         });
 
         this.socket.on("peer_media_changed", data => {
-            console.log("peer media changed", { data: data, users: this.users });
 
             if (this.users[data.from]) {
 
@@ -291,11 +266,10 @@ class RoomManager {
                         delete this.users[data.from].localStreams[data.streamId];
                         updated = true;
                     break;
-                    default: console.log("Unknown peer media changed type: "+data.type,{data:data});
+                    default: break;
                 }
 
                 if(updated){
-                    console.log("Peer updated with media change",{peer:this.users[data.from],data:data});
                     if (this.roomEventCallbacks["onPeerMediaChanged"]) {
                         this.roomEventCallbacks["onPeerMediaChanged"](data,this.users[data.from]);
                     }
@@ -306,7 +280,6 @@ class RoomManager {
         });
 
         this.socket.on("peer_score", data => {
-            console.log("peer_score", { data: data});
 
             if (this.roomEventCallbacks["onPeerScore"]) {
                 this.roomEventCallbacks["onPeerScore"](data);
@@ -374,24 +347,20 @@ class RoomManager {
     }
 
     sendMessage(roomId, userId, target, message) {
-        console.log("sending message", { roomId: roomId, userId: userId, target: target, message: message });
         this.socket.emit("message", { from: userId, target: target, roomId: roomId, message: message });
     }
 
     createSubRoom(roomId, roomName, roomMax, roomType) {
-        console.log("create subRoom", { roomId: roomId, roomName: roomName, roomMax: roomMax, roomType: roomType });
         this.socket.emit("create_sub_room", { roomId: roomId, roomName: roomName, roomMax: roomMax, roomType: roomType });
     }
 
     sendCameraState(roomId, userId, cameraEnabled) {
         this.users[userId].camera = cameraEnabled;
-        console.log("sending camera state", { roomId: roomId, userId: userId, enabled: cameraEnabled });
         this.socket.emit("peer_camera_state_changed", { peerId: userId, enabled: cameraEnabled, roomId: roomId });
     }
 
     sendMicState(roomId, userId, micEnabled) {
         this.users[userId].mic = micEnabled;
-        console.log("sending mic state", { roomId: roomId, userId: userId, enabled: micEnabled });
         this.socket.emit("peer_mic_state_changed", { peerId: userId, enabled: micEnabled, roomId: roomId });
     }
 
@@ -421,7 +390,6 @@ class RoomManager {
 
     leave(roomId, userId) {
         let prom = new Promise((resolve,reject) => {
-            console.log("emitting leave", { roomId: roomId, userId: userId });
             this.socket.emit("leave", { userId: userId, roomId: roomId },response => {
                 this.socket.disconnect();
                 this.chatMessages = [];

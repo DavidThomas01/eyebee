@@ -1,8 +1,4 @@
 class MobileDeviceDetector {
-    constructor(){
-
-    }
-
     isIOS() {
       if (/iPad|iPhone|iPod/.test(navigator.platform)) {
         return true;
@@ -32,7 +28,6 @@ class MobileDeviceDetector {
             return false;
            
           }
-        return false;
     }
 }
 
