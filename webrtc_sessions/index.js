@@ -1077,7 +1077,7 @@ io.on("connection", (socket) => {
         let peers = await memoryDBAPI.queryCollection("session_peers", [
             { "field": "userName", "operator": "==", "value": data.userName }
         ]);
-        logger.info("el resultado de buscar el peer con el mismo nombre ",{p:peer});
+        logger.info("el resultado de buscar el peer con el mismo nombre ",{p:peers});
         if(peers && Object.keys(peers).length > 0){
             result = {
                 type:"error",

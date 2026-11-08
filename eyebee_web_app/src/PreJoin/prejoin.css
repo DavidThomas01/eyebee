@@ -39,6 +39,7 @@
   justify-content: space-between;
   gap: 20px;
   padding: max(20px, env(safe-area-inset-top)) 20px calc(16px + env(safe-area-inset-bottom));
+  overflow-y: auto;
 }
 
 .prejoin-top {
@@ -176,6 +177,46 @@
   width: 100%;
   max-width: 420px;
   margin: 0 auto;
+}
+
+.prejoin-name {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.prejoin-name-label {
+  font-size: 13px;
+  line-height: 1.3;
+  color: var(--pj-muted);
+}
+
+.prejoin-name-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--pj-line);
+  border-radius: 8px;
+  background: var(--pj-surface);
+  color: var(--pj-ink);
+  font-family: var(--font-brand);
+  font-size: 16px;
+}
+
+.prejoin-name-input::placeholder {
+  color: var(--pj-muted);
+  opacity: 1;
+}
+
+.prejoin-name-input:focus {
+  outline: 2px solid var(--pj-yellow);
+  outline-offset: 1px;
+}
+
+.prejoin-name-input[aria-invalid="true"] {
+  border-color: var(--pj-error);
 }
 
 .prejoin-hint {
@@ -361,4 +402,22 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+@media (max-height: 700px) {
+  .prejoin-page {
+    gap: 12px;
+  }
+
+  .prejoin-hex-border {
+    width: clamp(170px, 52vw, 230px);
+  }
+
+  .prejoin-top {
+    gap: 10px;
+  }
+
+  .prejoin-controls {
+    margin-top: 2px;
+  }
 }

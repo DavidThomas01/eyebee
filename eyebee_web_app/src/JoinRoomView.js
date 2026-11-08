@@ -599,6 +599,20 @@ const JoinRoomView = (props) => {
             return;
         }
 
+        const trimmedName = userName.trim();
+        if (!trimmedName) {
+            setUsNameFieldStatus({
+                type: "error",
+                message: "USERNAME_FIELD_EMPTY",
+                longMessage: "Escribe tu nombre para continuar."
+            });
+            return;
+        }
+
+        if (usNameFieldStatus && usNameFieldStatus.type === "error") {
+            return;
+        }
+
         mobileJoinInFlight.current = true;
         setMobileJoinError("");
         if (props.onJoinStart) {
@@ -606,7 +620,7 @@ const JoinRoomView = (props) => {
         }
 
         try {
-            await props.joinRoom("Invitado", streamsStatus, peerTestResults, '');
+            await props.joinRoom(trimmedName, streamsStatus, peerTestResults, '');
         } catch (err) {
             if (props.onJoinCancel) {
                 props.onJoinCancel();
@@ -637,6 +651,14 @@ const JoinRoomView = (props) => {
                 let result ;
                 try{
                     result = await props.roomManager.checkUsernameAvailability(e.target.value);
+                    if (result && result.type === "error" && !result.longMessage) {
+                        result = {
+                            ...result,
+                            longMessage: result.message === "USERNAME_TAKEN"
+                                ? "Ese nombre ya está en uso."
+                                : "No se pudo comprobar el nombre."
+                        };
+                    }
                     setUsNameFieldStatus(result);
                 }catch(err){
                     setUsNameFieldStatus(result);
@@ -698,11 +720,16 @@ const JoinRoomView = (props) => {
             return <PreRoomLoading participantCount={props.joinParticipantCount} />;
         }
 
-        const mobilePrimaryHint = !cameraLoaded
-            ? "Preparando la cámara…"
-            : !props.roomManager
-                ? "Preparando la sala…"
-                : "";
+        const mobileNameError = usNameFieldStatus && usNameFieldStatus.type === "error"
+            ? usNameFieldStatus.longMessage || "No se pudo usar ese nombre."
+            : "";
+        const mobilePrimaryHint = !userName.trim()
+            ? "Escribe tu nombre para continuar."
+            : !cameraLoaded
+                ? "Preparando la cámara…"
+                : !props.roomManager
+                    ? "Preparando la sala…"
+                    : "";
 
         return (
             <MobilePreJoin
@@ -713,11 +740,14 @@ const JoinRoomView = (props) => {
                 onToggleMic={toggleMic}
                 participantCount={null}
                 primaryLabel={props.userData.create ? "Crear" : "Unirme"}
-                primaryDisabled={!cameraLoaded || !props.roomManager || props.joining}
+                primaryDisabled={!userName.trim() || Boolean(mobileNameError) || !cameraLoaded || !props.roomManager || props.joining}
                 primaryHint={mobilePrimaryHint}
                 onPrimary={mobileJoinClicked}
                 onCancel={mobileCancel}
                 error={mobileJoinError}
+                userName={userName}
+                onUserNameChange={usernameChanged}
+                nameError={mobileNameError}
             />
         );
     }

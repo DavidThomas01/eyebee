@@ -25,6 +25,9 @@ const MobilePreJoin = ({
     onPrimary,
     onCancel,
     error,
+    userName,
+    onUserNameChange,
+    nameError,
 }) => {
     const videoRef = useRef(null);
     const hintTimer = useRef(null);
@@ -129,6 +132,21 @@ const MobilePreJoin = ({
             </div>
 
             <div className="prejoin-bottom">
+                <label className="prejoin-name">
+                    <span className="prejoin-name-label">Tu nombre</span>
+                    <input
+                        className="prejoin-name-input"
+                        type="text"
+                        value={userName}
+                        onChange={onUserNameChange}
+                        placeholder="Escribe tu nombre"
+                        autoComplete="name"
+                        maxLength={14}
+                        aria-invalid={nameError ? "true" : "false"}
+                        aria-describedby={nameError ? "prejoin-name-error" : undefined}
+                    />
+                </label>
+                {nameError ? <p id="prejoin-name-error" className="prejoin-error" role="alert">{nameError}</p> : null}
                 {error ? <p className="prejoin-error" role="alert">{error}</p> : null}
                 {hint ? <p className="prejoin-hint" role="status" aria-live="polite">{hint}</p> : null}
                 <button
