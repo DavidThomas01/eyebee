@@ -23,6 +23,7 @@ import ScreenView from "../ScreenView";
 import RoomGrid from "../RoomGrid";
 import CreateNewSubRoom from "./CreateNewSubRoom";
 import MobileRoomBar from "./MobileRoomBar";
+import MobileRoomGrid from "./MobileRoomGrid";
 import RoomOptionsSheet from "./RoomOptionsSheet";
 import RoomInviteSheet from "./RoomInviteSheet";
 import ConnectionStatusSheet from "./ConnectionStatusSheet";
@@ -1354,19 +1355,14 @@ const Room = (props) => {
                   />
                 </div>
               ) : (
-                <RoomGrid
-                  nomedia={false}
+                <MobileRoomGrid
                   userData={props.userData}
                   roomUsers={roomUsers}
-                  playerSizes={playerSizes}
-                  isMainPresenter={isMainPresenter}
-                  isOwner={isOwner}
-                  isPresenter={isPresenter}
+                  remotePeerStreams={remotePeerStreams}
                   localCamera={props.localCamera}
                   goToScreen={goToScreen}
                   grantPresentation={grantPresentation}
-                  remotePeerStreams={remotePeerStreams}
-                  onPresentationRemoved={removePresentation}
+                  removePresentation={removePresentation}
                   onBackgroundClick={openConnectionSheet}
                 />
               )}
@@ -1390,7 +1386,10 @@ const Room = (props) => {
                 setOptionsOpen(false);
                 toggleSideBox({ opened: true, section: "chat" });
               }}
+              canShareScreen={isPresenter}
+              presentationRequested={presentationRequested}
               onToggleScreen={toggleScreen}
+              onTogglePresentation={presentationRequested ? cancelPresentation : requestPresentation}
               onLeave={leaveRoom}
             />
 

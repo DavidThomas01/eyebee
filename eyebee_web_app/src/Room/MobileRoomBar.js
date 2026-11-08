@@ -9,6 +9,7 @@ import VideocamOffOutlined from "@mui/icons-material/VideocamOffOutlined";
 import PeopleAltOutlined from "@mui/icons-material/PeopleAltOutlined";
 import ChatOutlined from "@mui/icons-material/ChatOutlined";
 import IosShareOutlined from "@mui/icons-material/IosShareOutlined";
+import PanToolOutlined from "@mui/icons-material/PanToolOutlined";
 import LogoutOutlined from "@mui/icons-material/LogoutOutlined";
 
 const useStyles = makeStyles(() => ({
@@ -83,7 +84,10 @@ const MobileRoomBar = ({
     onOpenOptions,
     onOpenPeople,
     onOpenChat,
+    canShareScreen,
+    presentationRequested,
     onToggleScreen,
+    onTogglePresentation,
     onLeave,
 }) => {
     const classes = useStyles();
@@ -121,9 +125,21 @@ const MobileRoomBar = ({
             <button type="button" className={classes.button} onClick={onOpenChat} aria-label="Chat">
                 <ChatOutlined />
             </button>
-            <button type="button" className={classes.button} onClick={onToggleScreen} aria-label="Compartir pantalla">
-                <IosShareOutlined />
-            </button>
+            {canShareScreen ? (
+                <button type="button" className={classes.button} onClick={onToggleScreen} aria-label="Compartir pantalla">
+                    <IosShareOutlined />
+                </button>
+            ) : (
+                <button
+                    type="button"
+                    className={`${classes.button} ${presentationRequested ? classes.settings : ""}`}
+                    onClick={onTogglePresentation}
+                    aria-label={presentationRequested ? "Bajar la mano" : "Levantar la mano"}
+                    aria-pressed={presentationRequested}
+                >
+                    <PanToolOutlined />
+                </button>
+            )}
             <button
                 type="button"
                 className={`${classes.button} ${classes.leave}`}

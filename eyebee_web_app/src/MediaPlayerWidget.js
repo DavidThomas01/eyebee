@@ -100,7 +100,6 @@ const MediaPlayerWidget = (props) => {
     const theme = useTheme();
     const classes = useStyles();
     const [mediaStream, setMediaStream] = useState(null);
-    const [showPlayer, setShowPlayer] = useState(false);
     const [vidHeight, setVidHeight] = useState(150);
     const [vidWidth, setVidWidth] = useState(150);
     const videoEl = useRef();
@@ -124,7 +123,6 @@ const MediaPlayerWidget = (props) => {
 
                     setVidHeight(videoEl.current.videoHeight);
                     setVidWidth(videoEl.current.videoWidth);
-                    setShowPlayer(true);
                 }
                 
             }
@@ -152,15 +150,6 @@ const MediaPlayerWidget = (props) => {
         }
     }, [props.playerSize]);
 
-    useEffect(() => {
-
-        if (props.nomedia) {
-           
-            setShowPlayer(true);
-        }
-    }, [props.nomedia]);
-
-
     const labelSize = typeof props.playerSize === "number" ? props.playerSize : 150;
     const cornerFontSize = Math.max(8, Math.round(labelSize * 0.055));
     const centeredFontSize = Math.max(11, Math.round(labelSize * 0.12));
@@ -178,8 +167,7 @@ const MediaPlayerWidget = (props) => {
                         style={{
                             width: (hexWidth + 8) + "px",
                             height: (hexHeight + 8) + "px",
-                            backgroundColor: hexColor,
-                            visibility: showPlayer ? "visible" : "hidden"
+                            backgroundColor: hexColor
                         }}
                     >
                     <div

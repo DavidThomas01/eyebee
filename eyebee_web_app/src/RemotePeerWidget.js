@@ -19,12 +19,12 @@ const useStyles = makeStyles(() => ({
     }
 }));
 
-const ScreenShareIcon = props => (
-    <SvgIcon {...props} component={ScreenShareOnSVG} viewBox="0 0 47.32 36.15" style={{ fontSize: "300%" }} />
+const ScreenShareIcon = ({ compact, ...props }) => (
+    <SvgIcon {...props} component={ScreenShareOnSVG} viewBox="0 0 47.32 36.15" style={{ fontSize: compact ? "20px" : "300%" }} />
 )
 
-const HandIcon = props => (
-    <SvgIcon {...props} component={HandOnSVG} viewBox="0 0 47.32 36.15" style={{ fontSize: "300%" }} />
+const HandIcon = ({ compact, ...props }) => (
+    <SvgIcon {...props} component={HandOnSVG} viewBox="0 0 47.32 36.15" style={{ fontSize: compact ? "20px" : "300%" }} />
 )
 
 const RemotePeerWidget = (props) => {
@@ -53,7 +53,7 @@ const RemotePeerWidget = (props) => {
                             (
                                 <div style={{
                                     position: "absolute",
-                                    left: "17px",
+                                    left: props.compact ? "6px" : "17px",
                                     zIndex: "3"
                                 }}>
                                     <IconButton
@@ -61,9 +61,8 @@ const RemotePeerWidget = (props) => {
                                             backgroundColor: "transparent"
                                         }}
                                         onClick={grantPresentation}
-                                        size="large">
-                                        <HandIcon style={{ ...theme.defaultIcon }} color="primary" />
-
+                                        size={props.compact ? "small" : "large"}>
+                                        <HandIcon compact={props.compact} color="primary" />
 
                                     </IconButton>
 
@@ -82,7 +81,7 @@ const RemotePeerWidget = (props) => {
                             (
                                 <div style={{
                                     position: "absolute",
-                                    right: "17px",
+                                    right: props.compact ? "6px" : "17px",
                                     zIndex: "3"
                                 }}>
                                     <IconButton
@@ -90,8 +89,8 @@ const RemotePeerWidget = (props) => {
                                             backgroundColor: "transparent"
                                         }}
                                         onClick={props.goToScreen}
-                                        size="large">
-                                        <ScreenShareIcon style={{ ...theme.defaultIcon }} color="primary" />
+                                        size={props.compact ? "small" : "large"}>
+                                        <ScreenShareIcon compact={props.compact} color="primary" />
 
                                     </IconButton>
 
